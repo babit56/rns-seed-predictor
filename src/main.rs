@@ -1,4 +1,4 @@
-use std::{env, fmt};
+use std::{env, fmt, fs::File, io::Write};
 
 const AREA_NAMES: [&'static str; 5] = [
     "hw_nest",
@@ -1211,7 +1211,52 @@ impl fmt::Display for Run {
     }
 }
 
+// Get enough state to tell completely whether two seeds will be equal
+fn get_short_state(seed: u32) -> (u32, u32) {
+    (
+        (seed * 0x343fd + 0x269ec3) >> 16,
+        ((seed + 5) * 0x343fd + 0x269ec3) >> 16,
+    )
+}
+
+fn generate_csv() {
+    // Only here for optimization, can be raised if RNG changes
+    let unique_seeds = 2usize.pow(17);
+    let mut states: Vec<(u32, u32)> = Vec::with_capacity(unique_seeds);
+    let mut lines: Vec<String> = Vec::with_capacity(unique_seeds);
+    for seed in 0.. {
+        // Check if we have found all seeds
+        if states.len() == unique_seeds {
+            break;
+        }
+        // Check if this is a new unique seed
+        let short_state = get_short_state(seed);
+        if states.contains(&short_state) {
+            continue;
+        }
+        states.push(short_state);
+
+        // Run prediction
+        let mut run = Run::new(seed, 4, true);
+        run.predict_seed();
+        lines.push(run.get_csv_line());
+
+        if lines.len() % 8192 == 0 {
+            println!("{} unique seeds found so far", states.len());
+        }
+    }
+    let mut file = File::create("unique_seeds.csv")
+        .expect("Expected to be able to create file unique_seeds.csv");
+    file.write_all(lines.join("\n").as_bytes())
+        .expect("Expected to be able to write to file unique_seeds.csv");
+}
+
 fn main() {
+    if env::args().len() == 1 {
+        println!("Generating csv file");
+        generate_csv();
+        return;
+    }
     let mut seed = 1585;
     let mut players = 4;
     let mut high_difficulty = true;
