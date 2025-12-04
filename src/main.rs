@@ -964,10 +964,10 @@ impl Run {
         r.shuffle(&mut chest_types);
         r.shuffle(&mut chest_types);
 
-        let mut taken_from_white = 0;
-        for (index, &chest_type) in chest_types[0..6].iter().enumerate() {
+        let mut white_chest_iter = all_list[2].iter();
+        for (chest_index, &chest_type) in chest_types[0..6].iter().enumerate() {
             let mut will_take = 5;
-            if index >= 2 {
+            if chest_index >= 2 {
                 will_take = match self.players {
                     1 => 3,
                     2 => 4,
@@ -975,24 +975,23 @@ impl Run {
                     _ => 5,
                 };
             }
-            // Filter away items in later areas
-            let item_iter = all_list[chest_type].iter().map(|&x| x).filter(|&item_id| {
-                !(index >= 4 && item_id == 357
-                    || index >= 5 && (item_id == 387 || item_id == 380 || item_id == 383))
-            });
-
-            let item_list;
-            if chest_type == 2 {
-                item_list = item_iter
-                    .skip(taken_from_white) // Skip items if this is the 2nd/3rd white chest
-                    .take(will_take)
-                    .collect();
-                taken_from_white += will_take;
+            let item_iter = if chest_type == 2 {
+                &mut white_chest_iter
             } else {
-                item_list = item_iter.take(will_take).collect();
+                &mut all_list[chest_type].iter()
+            };
+            let mut item_list = vec![];
+            for _ in 0..will_take {
+                let mut item_id = *item_iter.next().unwrap();
+                while chest_index >= 4 && item_id == 357
+                    || chest_index >= 5 && (item_id == 387 || item_id == 380 || item_id == 383)
+                {
+                    // Skip over banned items in area 3,4
+                    item_id = *item_iter.next().unwrap()
+                }
+                item_list.push(item_id);
             }
-
-            self.chests[index] = Chest::new(chest_type, item_list);
+            self.chests[chest_index] = Chest::new(chest_type, item_list);
         }
 
         // Outskirts
@@ -1241,7 +1240,7 @@ fn generate_csv() {
         run.predict_seed();
         lines.push(run.get_csv_line());
 
-        if lines.len() % 8192 == 0 {
+        if lines.len() % 10000 == 0 {
             println!("{} unique seeds found so far", states.len());
         }
     }
