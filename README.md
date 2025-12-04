@@ -70,4 +70,3 @@ Make sure you have installed cargo, for example via rustup.
 cargo build --release
 cargo run --release
 ```
-Currently the code does not run in debug mode since Rust panics on integer overflows (which are used frequently in the RNG code). I might fix this later, we'll see
