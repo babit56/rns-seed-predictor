@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{env, fmt};
 
 const AREA_NAMES: [&'static str; 5] = [
     "hw_nest",
@@ -1163,7 +1163,7 @@ impl fmt::Display for Run {
             let gem_prices = shop
                 .gems
                 .iter()
-                .map(|&(_, price)| OBJECT_NAMES[price])
+                .map(|&(_, price)| price.to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
             let potion_names = shop
@@ -1175,7 +1175,7 @@ impl fmt::Display for Run {
             let potion_prices = shop
                 .potions
                 .iter()
-                .map(|&(_, price)| OBJECT_NAMES[price])
+                .map(|&(_, price)| price.to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
             writeln!(f, "  Shop {}:", i)?;
@@ -1203,8 +1203,18 @@ impl fmt::Display for Run {
 }
 
 fn main() {
-    // let mut run = Run::new(1585);
-    let mut run = Run::new(74256, 1, true);
+    let mut seed = 1585;
+    let mut players = 4;
+    let mut high_difficulty = true;
+    for (i, arg) in env::args().enumerate() {
+        match i {
+            1 => seed = arg.parse().expect("Expected arg to be unsigned integer"),
+            2 => players = arg.parse().expect("Expected arg to be unsigned integer"),
+            3 => high_difficulty = arg.parse().expect("Expected arg to be bool"),
+            _ => {}
+        }
+    }
+    let mut run = Run::new(seed, players, high_difficulty);
     run.predict_seed();
     println!("{}", run);
     println!("{}", run.get_csv_line())
