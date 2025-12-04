@@ -55,7 +55,7 @@ Chest 4 - Sapphire:
 Chest 5 - White:
   Items: Leech Staff, Tiny Hourglass, Ruins Sword, Ivy Staff, Ornamental Bell
 
-1585,hw_nest,hw_lighthouse,hw_lakeside,hw_arsenal,hw_streets,enc_bird_sophomore1,enc_frog_tinkerer2,enc_wolf_blackear2,enc_mouse_cadet1,enc_dragon_granite1,410,365,324,473,443,414,432,416,310,289,336,358,470,339,354,471,353,334,341,482,449,460,319,311,412,321,469,472,392,370,489,490,496,8,9,10,508,23,517,24,522,23,519,27,490,496,491,7,8,10,512,27,513,24,514,26,507,26,491,497,492,8,9,10,512,25,509,24,514,26,523,23,503,502,494,8,10,9,512,25,521,25,522,25,519,25,
+1585,hw_nest,hw_lighthouse,hw_lakeside,hw_arsenal,hw_streets,enc_bird_sophomore1,enc_frog_tinkerer2,enc_wolf_blackear2,enc_queens_knife0,enc_queens_staff0,enc_queens_axe0,410,365,324,473,443,414,432,416,310,289,336,358,470,339,354,471,353,334,341,482,449,460,319,311,412,321,469,472,392,370,489,490,496,8,9,10,508,23,517,24,522,23,519,27,490,496,491,7,8,10,512,27,513,24,514,26,507,26,491,497,492,8,9,10,512,25,509,24,514,26,523,23,503,502,494,8,10,9,512,25,521,25,522,25,519,25,
 ```
 
 The last line is meant for a csv, where all the numbers are various ID's. See constants at the top of `src/main.rs` for ID -> Item names and more.

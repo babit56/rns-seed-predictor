@@ -1063,7 +1063,15 @@ impl Run {
         let outskirt_string = self
             .outskirts
             .iter()
+            .take(3) // Only output 3 fights
             .map(|&(fight_index, pattern_index)| OUTSKIRT_NAMES[fight_index][pattern_index])
+            .collect::<Vec<_>>()
+            .join(",");
+        let pale_keep_string = self
+            .pale_keep
+            .iter()
+            .take(3) // Only output 3 fights
+            .map(|&index| PALE_KEEP_NAMES[index])
             .collect::<Vec<_>>()
             .join(",");
         let item_string = self
@@ -1085,6 +1093,8 @@ impl Run {
         out.push_str(&area_string);
         out.push(',');
         out.push_str(&outskirt_string);
+        out.push(',');
+        out.push_str(&pale_keep_string);
         out.push(',');
         out.push_str(&item_string);
         out.push(',');
