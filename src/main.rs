@@ -553,6 +553,7 @@ const OBJECT_NAMES: [&'static str; 524] = [
     "Emerald Defensive Upgrade",
 ];
 
+#[allow(dead_code)]
 #[derive(Debug)]
 struct GMRand {
     seed: u32,
@@ -561,6 +562,7 @@ struct GMRand {
     random_poly: u32,
 }
 
+#[allow(dead_code)]
 impl GMRand {
     // move seeding to separate function?
     // add option for "correct" seeding
@@ -1149,7 +1151,7 @@ impl fmt::Display for Run {
         writeln!(f, "Pale Keep: [{}]", pale_keep_string)?;
 
         writeln!(f)?;
-        writeln!(f, "Shops:")?;
+        // writeln!(f, "Shops:")?;
         for (i, shop) in self.shops.into_iter().enumerate() {
             let gem_names = shop
                 .gems
@@ -1175,14 +1177,14 @@ impl fmt::Display for Run {
                 .map(|&(_, price)| price.to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
-            writeln!(f, "  Shop {}:", i)?;
-            writeln!(f, "    Gems: {}", gem_names)?;
-            writeln!(f, "    Prices: {}", gem_prices)?;
-            writeln!(f, "    Potions: {}", potion_names)?;
-            writeln!(f, "    Prices: {}", potion_prices)?;
+            writeln!(f, "Shop {}:", i)?;
+            writeln!(f, "  Gems: {}", gem_names)?;
+            writeln!(f, "  Prices: {}", gem_prices)?;
+            writeln!(f, "  Potions: {}", potion_names)?;
+            writeln!(f, "  Prices: {}", potion_prices)?;
         }
         writeln!(f)?;
-        writeln!(f, "Items:")?;
+        // writeln!(f, "Items:")?;
         for (i, chest) in self.chests.iter().enumerate() {
             let item_names = chest
                 .items
@@ -1192,8 +1194,8 @@ impl fmt::Display for Run {
                 .join(", ");
             let color = CHEST_NAMES[chest.color - 2];
 
-            writeln!(f, "  Chest {} - {}:", i, color)?;
-            writeln!(f, "    Items: {}", item_names)?;
+            writeln!(f, "Chest {} - {}:", i, color)?;
+            writeln!(f, "  Items: {}", item_names)?;
         }
         Ok(())
     }
