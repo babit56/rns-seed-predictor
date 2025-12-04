@@ -622,10 +622,15 @@ impl fmt::Display for Run {
 }
 
 // Get enough state to tell completely whether two seeds will be equal
+// I.e. calculate the first run of the TLCG for seed and seed+5
 fn get_short_state(seed: u32) -> (u32, u32) {
     (
-        (seed * 0x343fd + 0x269ec3) >> 16,
-        ((seed + 5) * 0x343fd + 0x269ec3) >> 16,
+        (seed.wrapping_mul(0x343fd).wrapping_add(0x269ec3)) >> 16,
+        (seed
+            .wrapping_add(5)
+            .wrapping_mul(0x343fd)
+            .wrapping_add(0x269ec3))
+            >> 16,
     )
 }
 
