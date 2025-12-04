@@ -582,7 +582,7 @@ impl GMRand {
 
         let mut temp = seed;
         for i in 0..16 {
-            temp = (temp * 0x343fd + 0x269ec3) >> 16;
+            temp = (temp.wrapping_mul(0x343fd).wrapping_add(0x269ec3)) >> 16;
             self.state[i] = temp;
         }
         seed
