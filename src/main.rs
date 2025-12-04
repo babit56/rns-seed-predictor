@@ -983,13 +983,11 @@ impl Run {
             if chest_type == 2 {
                 item_list = item_iter
                     .skip(taken_from_white) // Skip items if this is the 2nd/3rd white chest
-                    .take(will_take) // TODO: Take less if 1p or 2p/3p
+                    .take(will_take)
                     .collect();
                 taken_from_white += will_take;
             } else {
-                item_list = item_iter
-                    .take(will_take) // TODO: Take less if 1p or 2p/3p
-                    .collect();
+                item_list = item_iter.take(will_take).collect();
             }
 
             self.chests[index] = Chest::new(chest_type, item_list);
@@ -1017,8 +1015,7 @@ impl Run {
 
             let mut potions = all_list[19].clone();
             r.shuffle(&mut potions);
-            // TODO: Add separate logic for cute/normal
-            if area_index == 1 {
+            if area_index == 1 && self.high_difficulty {
                 potions[0] = 489;
             }
             let mut potion_index = 0;
@@ -1028,7 +1025,7 @@ impl Run {
                     potion_index += 1;
                 }
                 let potion_id = potions[potion_index];
-                let price = if area_index == 1 {
+                let price = if i == 0 && area_index == 1 && self.high_difficulty {
                     8 // Regen pot always costs 8
                 } else {
                     r.irandom_range(7, 10) as usize
