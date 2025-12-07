@@ -4,17 +4,19 @@ Have you ever wondered what items/shops/fights a seed has? Wonder no longer! Tha
 
 ## Usage
 
-Running the executable without any paramaters will generate the csv file with all unique seeds. This can take a while depending on your computer. The executable also accepts up to 3 parameters: `seed`, `players` and `high_difficulty`. The last parameter distinguishes between Cute/Normal and Hard/Lunar. 
-Players default to 4 and high difficulty defaults to true. Example command:
 
 ```sh
-rns-seed-predictor 1585
-```
-```sh
-rns-seed-predictor 1585 1 false
+# Print out possible commandline arguments
+rns-seed-predictor --help
+
+# Generate and print out info for the seed 1585
+rns-seed-predictor --seed 1585
+
+# Generate unique seeds with only the Ruins and Darkbite sets unlocked and save the data in ruins-darkbite-seeds.csv
+rns-seed-predictor --ruins --darkbite -o ruins-darkbite-seeds.csv
 ```
 
-Though it's subject to change, at the time of writing the output of `rns-seed-predictor 1585` is:
+Though it's subject to change, at the time of writing the output of `rns-seed-predictor --seed 1585` is:
 ```
 Seed: 1585
 Players: 4
@@ -69,4 +71,12 @@ Make sure you have installed cargo, for example via rustup.
 ```
 cargo build --release
 cargo run --release
+```
+
+## Thinking corner
+
+```sh
+rns --seed 1585 --no-unlocks --timegem --sacredflame --ruins
+rns --seed 1585 --no-timegem --no-sacredflame --no-ruins
+rns --seed 1585 --timegem --sacredflame --ruins
 ```

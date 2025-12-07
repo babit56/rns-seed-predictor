@@ -12,7 +12,7 @@
 /// See also [`new_legacy()`](GMRand::new_legacy) for information on some differences between modern and legacy versons of GML.
 ///
 /// [^lomont]: <https://lomont.org/papers/2008/Lomont_PRNG_2008.pdf>
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct GMRand {
     pub seed: u32,
     pub state: [u32; 16],

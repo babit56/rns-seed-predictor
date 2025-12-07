@@ -42,8 +42,6 @@ const PALE_KEEP_NAMES: [&'static str; 5] = [
     "enc_queens_harp0",
 ];
 
-const CHEST_NAMES: [&'static str; 6] = ["White", "Opal", "Sapphire", "Ruby", "Garnet", "Emerald"];
-
 const OBJECT_NAMES: [&'static str; 524] = [
     "nothing_item",
     "???",
