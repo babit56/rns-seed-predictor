@@ -2,6 +2,29 @@ pub fn get_area_name(area_index: usize) -> Option<&'static str> {
     AREA_NAMES.get(area_index).map(|&out| out)
 }
 
+pub fn get_area_name_pretty(area_index: usize) -> Option<&'static str> {
+    match area_index {
+        0 => Some("Scholar's Nest"),
+        1 => Some("King's Arsenal"),
+        2 => Some("Red Darkhouse"),
+        3 => Some("Churchmouse Streets"),
+        4 => Some("Emerald Lakeside"),
+        // 5 => Some("The Pale Keep"),
+        _ => None,
+    }
+}
+
+pub fn get_pale_keep_name_pretty(area_index: usize) -> Option<&'static str> {
+    match area_index {
+        0 => Some("Staff"),
+        1 => Some("Knives"),
+        2 => Some("Axe"),
+        3 => Some("Spear & Shield"),
+        4 => Some("Harp"),
+        _ => None,
+    }
+}
+
 pub fn get_outskirt_name(fight_index: usize, pattern: usize) -> Option<&'static str> {
     OUTSKIRT_NAMES
         .get(fight_index)

@@ -279,17 +279,17 @@ impl Run {
         let outskirt_string = self
             .outskirts
             .iter()
-            .take(3) // Only output 3 fights
             .map(|&(fight_index, pattern_index)| {
                 names::get_outskirt_name(fight_index, pattern_index).unwrap()
             })
+            .take(3) // Only output 3 fights
             .collect::<Vec<_>>()
             .join(",");
         let pale_keep_string = self
             .pale_keep
             .iter()
-            .take(3) // Only output 3 fights
             .map(|&index| names::get_pale_keep_name(index).unwrap())
+            .take(3) // Only output 3 fights
             .collect::<Vec<_>>()
             .join(",");
         let item_string = self
@@ -339,6 +339,72 @@ impl Run {
 
         out
     }
+
+    pub fn get_short_line(self: Self) -> String {
+        let mut out = String::new();
+
+        let area_string = self
+            .area_list
+            .iter()
+            .map(|&area_index| area_index.to_string())
+            .take(3) // Only output 3 areas
+            .collect::<Vec<_>>()
+            .join(",");
+        let outskirt_string = self
+            .outskirts
+            .iter()
+            .map(|&(fight_index, pattern_index)| {
+                // Write outskirt id where the ten's digit is the fight (1-5) and one's digit is the pattern (1-2)
+                ((fight_index + 1) * 10 + pattern_index + 1).to_string()
+            })
+            .take(3) // Only output 3 fights
+            .collect::<Vec<_>>()
+            .join(",");
+        let item_string = self
+            .chests
+            .iter()
+            .map(|chest| {
+                chest
+                    .as_ref()
+                    .unwrap()
+                    .items
+                    .iter()
+                    .map(|id| id.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            })
+            .collect::<Vec<_>>()
+            .join(",");
+
+        out.push_str(&self.map_seed.to_string());
+        out.push(',');
+        out.push_str(&area_string);
+        out.push(',');
+        out.push_str(&outskirt_string);
+        out.push(',');
+        out.push_str(&item_string);
+        out.push(',');
+
+        for shop in self.shops {
+            for potion in shop.unwrap().potions {
+                out.push_str(&potion.potion_id.to_string());
+                out.push(',');
+            }
+            for potion in shop.unwrap().potions {
+                out.push_str(&potion.price.to_string());
+                out.push(',');
+            }
+            for gem in shop.unwrap().gems {
+                out.push_str(&gem.gem_id.to_string());
+                out.push(',');
+                out.push_str(&gem.price.to_string());
+                out.push(',');
+            }
+        }
+        out.pop(); // Remove last comma
+
+        out
+    }
 }
 
 impl fmt::Display for Run {
@@ -348,31 +414,60 @@ impl fmt::Display for Run {
             .iter()
             .map(|hallseed| hallseed.to_string())
             .collect::<Vec<_>>()
-            .join(",");
+            .join(", ");
         let area_string = self
             .area_list
             .iter()
-            .map(|&area_index| names::get_area_name(area_index).unwrap())
+            .map(|&area_index| names::get_area_name_pretty(area_index).unwrap())
             .collect::<Vec<_>>()
-            .join(",");
+            .join(", ");
         let outskirt_string = self
             .outskirts
             .iter()
             .map(|&(fight_index, pattern_index)| {
                 names::get_outskirt_name(fight_index, pattern_index).unwrap()
             })
+            .take(3)
             .collect::<Vec<_>>()
-            .join(",");
+            .join(", ");
         let pale_keep_string = self
             .pale_keep
             .iter()
-            .map(|&index| names::get_pale_keep_name(index).unwrap())
+            .map(|&index| names::get_pale_keep_name_pretty(index).unwrap())
+            .take(3)
             .collect::<Vec<_>>()
-            .join(",");
+            .join(", ");
         let difficulty_string = if self.high_difficulty {
             "Hard/Lunar"
         } else {
             "Cute/Normal"
+        };
+        let get_shop_things = |shop: Shop| {
+            let gem_names = shop
+                .gems
+                .iter()
+                .map(|gem| gem.gem_type.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            let gem_prices = shop
+                .gems
+                .iter()
+                .map(|gem| gem.price.to_string() + "g")
+                .collect::<Vec<_>>()
+                .join(", ");
+            let potion_names = shop
+                .potions
+                .iter()
+                .map(|potion| names::get_item_name(potion.potion_id).unwrap())
+                .collect::<Vec<_>>()
+                .join(", ");
+            let potion_prices = shop
+                .potions
+                .iter()
+                .map(|potion| potion.price.to_string() + "g")
+                .collect::<Vec<_>>()
+                .join(", ");
+            (gem_names, gem_prices, potion_names, potion_prices)
         };
 
         writeln!(f, "Seed: {}", self.map_seed)?;
@@ -380,41 +475,15 @@ impl fmt::Display for Run {
         writeln!(f, "Difficulty: {}", difficulty_string)?;
         writeln!(f, "Hallseeds: [{}]", hallseed_string)?;
         writeln!(f, "Areas: [{}]", area_string)?;
-        writeln!(f, "Outskirts: [{}]", outskirt_string)?;
-        writeln!(f, "Pale Keep: [{}]", pale_keep_string)?;
+        writeln!(f, "Outskirts enemies: [{}]", outskirt_string)?;
+        writeln!(f, "Pale Keep enemies: [{}]", pale_keep_string)?;
 
         writeln!(f)?;
         // writeln!(f, "Shops:")?;
         for (i, shop) in self.shops.into_iter().enumerate() {
-            let gem_names = shop
-                .unwrap()
-                .gems
-                .iter()
-                .map(|gem| gem.gem_type.to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            let gem_prices = shop
-                .unwrap()
-                .gems
-                .iter()
-                .map(|gem| gem.price.to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            let potion_names = shop
-                .unwrap()
-                .potions
-                .iter()
-                .map(|potion| names::get_item_name(potion.potion_id).unwrap())
-                .collect::<Vec<_>>()
-                .join(", ");
-            let potion_prices = shop
-                .unwrap()
-                .potions
-                .iter()
-                .map(|potion| potion.price.to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            writeln!(f, "Shop {}:", i)?;
+            let (gem_names, gem_prices, potion_names, potion_prices) =
+                get_shop_things(shop.unwrap());
+            writeln!(f, "Shop {}:", i + 1)?;
             writeln!(f, "  Gems: {}", gem_names)?;
             writeln!(f, "  Prices: {}", gem_prices)?;
             writeln!(f, "  Potions: {}", potion_names)?;
@@ -433,8 +502,8 @@ impl fmt::Display for Run {
                 .join(", ");
 
             let color = chest.as_ref().unwrap().color;
-            writeln!(f, "Chest {} - {}:", i, color)?;
-            writeln!(f, "  Items: {}", item_names)?;
+            writeln!(f, "Chest {} - {}:", i + 1, color)?;
+            writeln!(f, "  {}", item_names)?;
         }
         Ok(())
     }

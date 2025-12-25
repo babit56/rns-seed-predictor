@@ -1,0 +1,31 @@
+# Area names are hw_nest, hw_arsenal, hw_streets, hw_lighthouse, hw_lakeside
+# NOTE: not implemented atm
+# areas:
+#   0: null 
+#   1: null 
+#   2: null 
+
+ranges:
+  chest_ranges:
+     # - start: 0  # Chest index (0 = Chest 1)
+     #   end: 1    # Chest index (1 = Chest 2)
+     #   required_items: []  # Items that must appear somewhere in this range
+     #   unique: false  # If true, each item must be in a different chest
+     # Example: Mountain Staff and Firststrike Bracelet in first 2 chests, different chests
+     - start: 0
+       end: 1
+       required_items: ["Mountain Staff", "Firststrike Bracelet"]
+       unique: true
+  
+  shop_ranges:
+     # - start: 0  # Shop index (0 = Shop 1)
+     #   end: 0    
+     #   required_upgrades: []  # Upgrades that must appear somewhere in this range
+     #   unique: false  # If true, each upgrade must be in a different shop
+     #   max_cost: null  # Maximum cost for required upgrades (null = any cost)
+     # Example: g2 e3 affordable in first shop
+     - start: 0
+       end: 0
+       required_upgrades: ["Garnet Secondary Upgrade", "Emerald Special Upgrade"]
+       unique: false
+       max_cost: 24

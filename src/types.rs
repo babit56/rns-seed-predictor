@@ -1,6 +1,6 @@
-use derive_more::Display;
+use std::fmt;
 
-#[derive(Debug, Clone, Copy, Display)]
+#[derive(Debug, Clone, Copy)]
 pub enum ChestColor {
     WHITE = 2,
     OPAL = 3,
@@ -16,7 +16,7 @@ pub struct Chest {
     pub items: Vec<usize>,
 }
 
-#[derive(Debug, Clone, Copy, Display)]
+#[derive(Debug, Clone, Copy)]
 pub enum GemType {
     OPAL,
     SAPPHIRE,
@@ -74,6 +74,20 @@ impl TryFrom<usize> for ChestColor {
     }
 }
 
+impl fmt::Display for ChestColor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let color_str = match *self {
+            ChestColor::WHITE => "White",
+            ChestColor::OPAL => "Opal",
+            ChestColor::SAPPHIRE => "Sapphire",
+            ChestColor::RUBY => "Ruby",
+            ChestColor::GARNET => "Garnet",
+            ChestColor::EMERALD => "Emerald",
+        };
+        write!(f, "{}", color_str)
+    }
+}
+
 impl Chest {
     pub fn from_id(color_id: usize, items: Vec<usize>) -> Result<Self, &'static str> {
         let color = ChestColor::try_from(color_id)?;
@@ -93,6 +107,19 @@ impl TryFrom<usize> for GemType {
             4 => Ok(Self::EMERALD),
             _ => Err("Got invalid chest color index"),
         }
+    }
+}
+
+impl fmt::Display for GemType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let color_str = match *self {
+            GemType::OPAL => "Opal",
+            GemType::SAPPHIRE => "Sapphire",
+            GemType::RUBY => "Ruby",
+            GemType::GARNET => "Garnet",
+            GemType::EMERALD => "Emerald",
+        };
+        write!(f, "{}", color_str)
     }
 }
 
@@ -161,5 +188,40 @@ impl Unlocks {
             ruins: true,
             lakeshrine: true,
         }
+    }
+
+    /// Interprets usize as a bitstring with each bit corresponding to a field
+    #[rustfmt::skip]
+    pub fn from_bitstring(bitstring: usize) -> Self {
+        Self {
+            darkbite:    bitstring & (1 << 0) != 0,
+            timegem:     bitstring & (1 << 1) != 0,
+            youkai:      bitstring & (1 << 2) != 0,
+            haunted:     bitstring & (1 << 3) != 0,
+            gladiator:   bitstring & (1 << 4) != 0,
+            sparkblade:  bitstring & (1 << 5) != 0,
+            swiftflight: bitstring & (1 << 6) != 0,
+            sacredflame: bitstring & (1 << 7) != 0,
+            ruins:       bitstring & (1 << 8) != 0,
+            lakeshrine:  bitstring & (1 << 9) != 0,
+        }
+    }
+
+    #[rustfmt::skip]
+    pub fn get_bitstring(self: &Self) -> usize {
+        let mut bitmask = 0;
+
+        if self.darkbite    { bitmask |= 1 << 0 }
+        if self.timegem     { bitmask |= 1 << 1 }
+        if self.youkai      { bitmask |= 1 << 2 }
+        if self.haunted     { bitmask |= 1 << 3 }
+        if self.gladiator   { bitmask |= 1 << 4 }
+        if self.sparkblade  { bitmask |= 1 << 5 }
+        if self.swiftflight { bitmask |= 1 << 6 }
+        if self.sacredflame { bitmask |= 1 << 7 }
+        if self.ruins       { bitmask |= 1 << 8 }
+        if self.lakeshrine  { bitmask |= 1 << 9 }
+
+        bitmask
     }
 }

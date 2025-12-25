@@ -1,6 +1,11 @@
 use clap::Parser;
+use rayon::prelude::*;
 use rns_seed_predictor::{types::Unlocks, Run};
-use std::{fs::File, io::Write, path::PathBuf};
+use std::{
+    fs::{self, File},
+    io::{BufWriter, Write},
+    path::PathBuf,
+};
 
 #[derive(Parser, Debug, Clone)]
 #[command(
@@ -23,7 +28,7 @@ struct Cli {
     #[arg(short, long)]
     easy: bool,
 
-    /// Turn off all unlocks
+    /// Turn off all unlocks. Incompatiable (= ignored)
     #[arg(long)]
     no_unlocks: bool,
 
@@ -59,6 +64,10 @@ struct Cli {
 
     #[arg(short, long, default_value = "unique_seeds.csv")]
     outfile: PathBuf,
+
+    /// Whether one specific combination of sets should be generated or if all possible combinations should be generated
+    #[arg(long)]
+    full_generation: bool,
 }
 
 impl Cli {
@@ -100,11 +109,11 @@ fn get_short_state(seed: u32) -> (u32, u32) {
     )
 }
 
-fn generate_csv(players: u8, high_difficulty: bool, unlocks: Unlocks) -> Vec<String> {
-    // Only here for optimization, can be raised or removed if RNG changes
+fn get_unique_seeds() -> Vec<u32> {
+    // NOTE: assumes there are 2^17 unique seeds
     let unique_seeds = 2usize.pow(17);
     let mut states: Vec<(u32, u32)> = Vec::with_capacity(unique_seeds);
-    let mut lines: Vec<String> = Vec::with_capacity(unique_seeds);
+    let mut seeds: Vec<u32> = Vec::with_capacity(unique_seeds);
     for seed in 0.. {
         // Check if we have found all seeds
         if states.len() == unique_seeds {
@@ -116,17 +125,54 @@ fn generate_csv(players: u8, high_difficulty: bool, unlocks: Unlocks) -> Vec<Str
             continue;
         }
         states.push(short_state);
+        seeds.push(seed);
+    }
+    seeds
+}
 
+fn generate_csv(players: u8, high_difficulty: bool, unlocks: Unlocks) -> Vec<String> {
+    let seeds = get_unique_seeds();
+    println!("Unique seeds enumerated, generating seeds");
+    let unique_seeds = 2usize.pow(17);
+    let mut lines: Vec<String> = Vec::with_capacity(unique_seeds);
+    for seed in seeds {
         // Run prediction
         let mut run = Run::new(seed, players, high_difficulty, unlocks);
         run.predict_seed();
         lines.push(run.get_csv_line());
 
         if lines.len() % 10000 == 0 {
-            println!("{} unique seeds found so far", states.len());
+            println!(
+                "{} out of {} seeds processed so far",
+                lines.len(),
+                unique_seeds
+            );
         }
     }
     return lines;
+}
+
+fn full_generation(players: u8, high_difficulty: bool, unlock_mask: usize) {
+    fs::create_dir_all("full_gen").unwrap();
+    let seeds = get_unique_seeds();
+    println!("Unique seeds enumerated, generating csv files");
+    // Get unique combinations of Unlocks
+    let unlock_combinations: Vec<Unlocks> = (0..2_usize.pow(10))
+        .into_iter()
+        .filter(|num| num & unlock_mask == unlock_mask)
+        .map(|bitstring| Unlocks::from_bitstring(bitstring))
+        .collect();
+    // Generate csv file for each Unlocks
+    unlock_combinations.into_par_iter().for_each(|unlocks| {
+        let path = format!("full_gen/{:b}.csv", unlocks.get_bitstring());
+        let file = File::create(path).unwrap();
+        let mut writer = BufWriter::new(file);
+        for seed in &seeds {
+            let mut run = Run::new(*seed, players, high_difficulty, unlocks);
+            run.predict_seed();
+            writeln!(writer, "{}", run.get_short_line()).unwrap();
+        }
+    });
 }
 
 fn main() {
@@ -138,6 +184,9 @@ fn main() {
         run.predict_seed();
         println!("{}", run);
         println!("{}", run.get_csv_line());
+    } else if cli.full_generation {
+        let unlock_mask = cli.get_unlocks().get_bitstring();
+        full_generation(cli.players, !cli.easy, unlock_mask);
     } else {
         let csv_lines = generate_csv(cli.players, !cli.easy, unlocks);
         let mut file = File::create(&cli.outfile).expect(&format!(

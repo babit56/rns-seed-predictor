@@ -11,3 +11,4 @@ repository = "https://github.com/babit56/rns-seed-predictor"
 [dependencies]
 clap = { version = "4.5.53", features = ["derive"] }
 derive_more = { version = "2", features = ["display"] }
+rayon = "1.11.0"
