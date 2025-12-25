@@ -14,7 +14,15 @@ rns-seed-predictor --seed 1585
 
 # Generate unique seeds with only the Ruins and Darkbite sets unlocked and save the data in ruins-darkbite-seeds.csv
 rns-seed-predictor --ruins --darkbite -o ruins-darkbite-seeds.csv
+
+# Generate all possible combinations of unlocked sets where ruins and darkbite are turned. Saves in full_gen/, takes ~7 min on my machine
+# Be warned, it uses all the cpu power (cores) you give it (thanks to multithreading via rayon)
+rns-seed-predictor --full-generation --ruins --darkbite
 ```
+
+See readme in `seed_searcher/` folder for usage of that tool
+
+## Output
 
 Though it's subject to change, at the time of writing the output of `rns-seed-predictor --seed 1585` is:
 ```
@@ -71,12 +79,4 @@ Make sure you have installed cargo, for example via rustup.
 ```
 cargo build --release
 cargo run --release
-```
-
-## Thinking corner
-
-```sh
-rns --seed 1585 --no-unlocks --timegem --sacredflame --ruins
-rns --seed 1585 --no-timegem --no-sacredflame --no-ruins
-rns --seed 1585 --timegem --sacredflame --ruins
 ```
