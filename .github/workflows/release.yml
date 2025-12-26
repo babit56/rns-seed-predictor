@@ -33,10 +33,11 @@ jobs:
             os: windows-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: rns-seed-predictor
           target: ${{ matrix.target }}
-          include: seed_searcher/main.py,seed_searcher/config.yaml,seed_searcher/ids.txt
+          leading-dir: true
+          include: seed_searcher/
           token: ${{ secrets.GITHUB_TOKEN }}
