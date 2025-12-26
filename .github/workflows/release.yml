@@ -38,5 +38,5 @@ jobs:
         with:
           bin: rns-seed-predictor
           target: ${{ matrix.target }}
-          asset: seed_searcher/main.py,seed_searcher/config.yaml,seed_searcher/ids.txt
+          include: seed_searcher/main.py,seed_searcher/config.yaml,seed_searcher/ids.txt
           token: ${{ secrets.GITHUB_TOKEN }}
