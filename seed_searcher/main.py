@@ -295,7 +295,10 @@ def main():
         os.remove("matching_seeds_readable.csv")
     except FileNotFoundError:
         pass
-    os.makedirs("full_search_results/")
+    try:
+        os.makedirs("full_search_results/")
+    except FileExistsError:
+        pass
     for file in os.listdir("full_search_results/"):
         os.remove("full_search_results/" + file)
 
