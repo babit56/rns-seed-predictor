@@ -267,7 +267,7 @@ impl Run {
 
     // fn generate_shop() -> Shop {}
 
-    pub fn get_csv_line(self: Self) -> String {
+    pub fn get_csv_line(self: &Self) -> String {
         let mut out = String::new();
 
         let area_string = self
@@ -340,7 +340,7 @@ impl Run {
         out
     }
 
-    pub fn get_short_line(self: Self) -> String {
+    pub fn get_short_line(self: &Self) -> String {
         let mut out = String::new();
 
         let area_string = self

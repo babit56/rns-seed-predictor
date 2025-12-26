@@ -1,9 +1,10 @@
-use clap::Parser;
+use clap::{Args, Parser};
 use rayon::prelude::*;
 use rns_seed_predictor::{types::Unlocks, Run};
 use std::{
     fs::{self, File},
     io::{BufWriter, Write},
+    num::ParseIntError,
     path::PathBuf,
 };
 
@@ -11,8 +12,8 @@ use std::{
 #[command(
     version,
     about,
-    after_help = "If no unlock-related flags are provided, all sets are assumed to be unlocked. If --no-unlocks is given, it gets priority over the other set-specific flags.
-Otherwise, only the sets for the given set-flags are turned on"
+    after_help = "If no unlock-related flags are provided, all sets are assumed to be unlocked. If only single set args are given, all sets except the given ones are assumed to be locked.
+The order of priority for unlock-related flags is 1. --unlock-bitstring, 2. --no-unlocks and 3. specific sets"
 )]
 struct Cli {
     /// Optional seed to generate. If not specificed, run for all seeds
@@ -29,9 +30,28 @@ struct Cli {
     easy: bool,
 
     /// Turn off all unlocks. Incompatiable (= ignored)
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = ["single_unlocks", "unlock_bitstring"])]
     no_unlocks: bool,
 
+    /// Specify unlocks with a bitstring like 1100010001, where darkbite is the rightmost bit, timegem the 2nd, etc. Uses the same order as seen on the wiki. useful for debugging --full-generation output
+    #[arg(long, value_parser = parse_bitstring, conflicts_with = "single_unlocks")]
+    unlock_bitstring: Option<usize>,
+
+    #[command(flatten)]
+    single_unlocks: SingleUnlocks,
+
+    /// The file to write to when generating a single csv file
+    #[arg(short, long, default_value = "unique_seeds.csv")]
+    outfile: PathBuf,
+
+    /// Instead of generating seeds for the specified unlocks, generate seeds for all unlock combinations (where the specificed unlocks are indeed unlocked).
+    /// Seeds are written to a file named after their respective unlock bitstring, in the folder full_gen/
+    #[arg(long, conflicts_with = "seed")]
+    full_generation: bool,
+}
+
+#[derive(Args, Debug, Clone)]
+struct SingleUnlocks {
     #[arg(long)]
     darkbite: bool,
 
@@ -61,13 +81,6 @@ struct Cli {
 
     #[arg(long)]
     lakeshrine: bool,
-
-    #[arg(short, long, default_value = "unique_seeds.csv")]
-    outfile: PathBuf,
-
-    /// Whether one specific combination of sets should be generated or if all possible combinations should be generated
-    #[arg(long)]
-    full_generation: bool,
 }
 
 impl Cli {
@@ -75,18 +88,20 @@ impl Cli {
     fn get_unlocks(self: &Self) -> Unlocks {
         let mut unlocks = Unlocks::with_none();
 
-        if self.darkbite    { unlocks.darkbite    = true; }
-        if self.timegem     { unlocks.timegem     = true; }
-        if self.youkai      { unlocks.youkai      = true; }
-        if self.haunted     { unlocks.haunted     = true; }
-        if self.gladiator   { unlocks.gladiator   = true; }
-        if self.sparkblade  { unlocks.sparkblade  = true; }
-        if self.swiftflight { unlocks.swiftflight = true; }
-        if self.sacredflame { unlocks.sacredflame = true; }
-        if self.ruins       { unlocks.ruins       = true; }
-        if self.lakeshrine  { unlocks.lakeshrine  = true; }
+        if self.single_unlocks.darkbite    { unlocks.darkbite    = true; }
+        if self.single_unlocks.timegem     { unlocks.timegem     = true; }
+        if self.single_unlocks.youkai      { unlocks.youkai      = true; }
+        if self.single_unlocks.haunted     { unlocks.haunted     = true; }
+        if self.single_unlocks.gladiator   { unlocks.gladiator   = true; }
+        if self.single_unlocks.sparkblade  { unlocks.sparkblade  = true; }
+        if self.single_unlocks.swiftflight { unlocks.swiftflight = true; }
+        if self.single_unlocks.sacredflame { unlocks.sacredflame = true; }
+        if self.single_unlocks.ruins       { unlocks.ruins       = true; }
+        if self.single_unlocks.lakeshrine  { unlocks.lakeshrine  = true; }
 
-        if self.no_unlocks {
+        if let Some(bitstring) = self.unlock_bitstring {
+            Unlocks::from_bitstring(bitstring)
+        } else if self.no_unlocks {
             Unlocks::with_none()
         } else if unlocks == Unlocks::with_none() {
             Unlocks::with_all()
@@ -94,6 +109,10 @@ impl Cli {
             unlocks
         }
     }
+}
+
+fn parse_bitstring(bitstring: &str) -> Result<usize, ParseIntError> {
+    usize::from_str_radix(bitstring, 2)
 }
 
 // Get enough state to tell completely whether two seeds will be equal
@@ -153,7 +172,8 @@ fn generate_csv(players: u8, high_difficulty: bool, unlocks: Unlocks) -> Vec<Str
 }
 
 fn full_generation(players: u8, high_difficulty: bool, unlock_mask: usize) {
-    fs::create_dir_all("full_gen").unwrap();
+    fs::create_dir_all("full_gen")
+        .expect("Expected to be able to create directory 'full_gen/' for saving csv's");
     let seeds = get_unique_seeds();
     println!("Unique seeds enumerated, generating csv files");
     // Get unique combinations of Unlocks
@@ -164,7 +184,7 @@ fn full_generation(players: u8, high_difficulty: bool, unlock_mask: usize) {
         .collect();
     // Generate csv file for each Unlocks
     unlock_combinations.into_par_iter().for_each(|unlocks| {
-        let path = format!("full_gen/{:b}.csv", unlocks.get_bitstring());
+        let path = format!("full_gen/{:0>10b}.csv", unlocks.get_bitstring());
         let file = File::create(path).unwrap();
         let mut writer = BufWriter::new(file);
         for seed in &seeds {
@@ -179,15 +199,25 @@ fn main() {
     let cli = Cli::parse();
     // println!("{:?}", cli);
     let unlocks = cli.get_unlocks();
+    println!(
+        "Using unlocks with following bitstring: {}",
+        unlocks.get_bitstring()
+    );
     if let Some(seed) = cli.seed {
         let mut run = Run::new(seed, cli.players, !cli.easy, unlocks);
         run.predict_seed();
         println!("{}", run);
         println!("{}", run.get_csv_line());
+        println!("{}", run.get_short_line());
     } else if cli.full_generation {
+        println!(
+            "Generating csv's for all combinations of given unlocks, in total {} csv's",
+            2_usize.pow(10 - unlocks.get_bitstring().count_ones())
+        );
         let unlock_mask = cli.get_unlocks().get_bitstring();
         full_generation(cli.players, !cli.easy, unlock_mask);
     } else {
+        println!("Generating one csv file");
         let csv_lines = generate_csv(cli.players, !cli.easy, unlocks);
         let mut file = File::create(&cli.outfile).expect(&format!(
             "Expected to be able to create file {}",

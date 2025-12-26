@@ -1,9 +1,8 @@
 # Rabbit & Steel Seed Predictor
 
-Have you ever wondered what items/shops/fights a seed has? Wonder no longer! Thanks to some solid reverse engineering by the [RnS discord](https://discord.com/invite/mns), the main elements of the RNG used to generate a run can and has now been implemented in Rust. This has previously been done in GML, which this code is mostly based on.
+Have you ever wondered what items/shops/fights a seed has? Wonder no longer! Thanks to some solid reverse engineering by the [Rabbit & Steel Discord](https://discord.com/invite/mns), the main elements of the RNG used to generate a run can and has now been implemented in Rust. This has previously been done in GML, which this code is mostly based on.
 
 ## Usage
-
 
 ```sh
 # Print out possible commandline arguments
@@ -15,12 +14,11 @@ rns-seed-predictor --seed 1585
 # Generate unique seeds with only the Ruins and Darkbite sets unlocked and save the data in ruins-darkbite-seeds.csv
 rns-seed-predictor --ruins --darkbite -o ruins-darkbite-seeds.csv
 
-# Generate all possible combinations of unlocked sets where ruins and darkbite are turned. Saves in full_gen/, takes ~7 min on my machine
-# Be warned, it uses all the cpu power (cores) you give it (thanks to multithreading via rayon)
+# Generate all possible combinations of unlocked sets where the ruins and darkbite sets are unlocked. Saves in full_gen/, takes ~7 min on my machine (12 threads @ 3.7GHz)
 rns-seed-predictor --full-generation --ruins --darkbite
 ```
 
-See readme in `seed_searcher/` folder for usage of that tool
+See README in `seed_searcher/` folder for searching through the generated seeds
 
 ## Output
 
@@ -75,7 +73,7 @@ The last line is meant for the csv, where all the numbers are various ID's. See 
 
 ## Building
 
-Make sure you have installed cargo, for example via rustup.
+Make sure you have installed cargo, for example via [rustup](https://rust-lang.org/tools/install/).
 ```
 cargo build --release
 cargo run --release

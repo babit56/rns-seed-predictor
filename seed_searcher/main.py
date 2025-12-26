@@ -4,6 +4,7 @@ import yaml
 import re
 import itertools
 import os
+import sys
 
 @dataclass
 class Chest:
@@ -52,6 +53,7 @@ class Run:
         
         return "\n".join(lines)
 
+# Normal ID's
 id_to_name: dict[int, str] = {}
 name_to_id: dict[str, int] = {}
 
@@ -64,7 +66,40 @@ with open("ids.txt", 'r') as f:
             id_to_name[id] = name
             name_to_id[name] = id
 
-def line_to_run(line: str) -> Run:
+# Homemade ID's
+id_area_list = [
+    (0, "hw_nest"),
+    (1, "hw_arsenal"),
+    (2, "hw_lighthouse"),
+    (3, "hw_streets"),
+    (4, "hw_lakeside"),
+]
+id_to_area: dict[int, str] = {}
+area_to_id: dict[str, int] = {}
+id_outskirt_list = [
+    (11, "enc_bird_sophomore1"),
+    (12, "enc_bird_sophomore2"),
+    (21, "enc_frog_tinkerer1"),
+    (22, "enc_frog_tinkerer2"),
+    (31, "enc_dragon_granite1"),
+    (32, "enc_dragon_granite2"),
+    (41, "enc_wolf_blackear1"),
+    (42, "enc_wolf_blackear2"),
+    (51, "enc_mouse_cadet1"),
+    (52, "enc_mouse_cadet2"),
+]
+id_to_outskirt: dict[int, str] = {}
+outskirt_to_id: dict[str, int] = {}
+
+for (id, name) in id_area_list:
+    id_to_area[id] = name
+    area_to_id[name] = id
+
+for (id, name) in id_outskirt_list:
+    id_to_outskirt[id] = name
+    outskirt_to_id[name] = id
+
+def parse_line(line: str) -> Run:
     line_data = line.strip().split(',')
     seed = line_data[0]
     areas = tuple(line_data[1:4])
@@ -107,24 +142,46 @@ def generate_runs(filename: str) -> Generator[Run, None, None]:
         lines = f.readlines()
 
     for line in lines:
-        yield line_to_run(line)
+        yield parse_line(line)
 
 def load_config(config_path: str = "config.yaml") -> dict:
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
     if not config: return {}
 
-    for ranges in config['ranges']['chest_ranges']:
-        items = ranges.get('required_items', [])
-        ids = list(map(lambda i: str(name_to_id[i]), items))
-        ranges['required_items'] = ids
+    # Map names to ID's for items, shops, and areas
+    if config.get('ranges') and config.get('ranges').get('chest_ranges'):
+        for ranges in config['ranges']['chest_ranges']:
+            items = ranges.get('required_items', [])
+            ids = list(map(lambda i: str(name_to_id[i]), items))
+            ranges['required_items'] = ids
 
-    for ranges in config['ranges']['shop_ranges']:
-        items = ranges.get('required_upgrades', [])
-        ids = list(map(lambda i: str(name_to_id[i]), items))
-        ranges['required_upgrades'] = ids
+    if config.get('ranges') and config.get('ranges').get('shop_ranges'):
+        for ranges in config['ranges']['shop_ranges']:
+            items = ranges.get('required_upgrades', [])
+            ids = list(map(lambda i: str(name_to_id[i]), items))
+            ranges['required_upgrades'] = ids
+
+    if config.get('areas'):
+        for i in range(3):
+            area = config['areas'][i]
+            id = area_to_id[area]
+            config['areas'][i] = id
 
     return config
+
+def check_areas(line: list, config: dict):
+    for i in range(3):
+        area_id = str(config[i])
+        if config['ordered']:
+            if line[i+1] != area_id:
+                return False
+        else:
+            try:
+                line.index(area_id, 1, 4)
+            except ValueError:
+                return False
+    return True
 
 def check_ranged_requirements(line: list, ranged_config: dict) -> bool:
     if not ranged_config:
@@ -190,27 +247,75 @@ def matches_criteria(line: list, config: dict) -> bool:
         if not check_ranged_requirements(line, config['ranges']):
             return False
     
-    if 'areas' in config and config['areas']:
-        for idx, required_area in config['areas'].items():
-            if required_area is not None:
-                # TODO: map name to homemade id here, always fails (if given) atm
-                if idx >= 3 or line[idx+1] != required_area:
-                    return False
+    if 'areas' in config:
+        if not check_areas(line, config['areas']):
+            return False
     
     return True
 
-def main():
-    config = load_config("config.yaml")
+def find_matches(filename: str, config: dict) -> list:
+    matching_runs = []
+    with open(filename, "r") as f:
+        for line in f.readlines():
+            if matches_criteria(line.split(","), config):
+                matching_runs.append(line)
+    return matching_runs
+
+def full_search(config: dict):
     matching_runs = []
     for filename in os.listdir("../full_gen"):
-        with open("../full_gen/" + filename, "r") as f:
-            for line in f.readlines():
-                if matches_criteria(line.split(","), config):
-                    matching_runs.append(line)
-    print(f"Matching runs: {len(matching_runs)}")
-    with open("matching_seeds.txt", 'w') as f:
+        filename = "../full_gen/" + filename
+        matches = find_matches(filename, config)
+        matching_runs.extend(map(lambda x: (filename, x), matches))
+    print(f"Total matching runs: {len(matching_runs)}")
+
+    # Write csv lines
+    for (filename, line) in matching_runs:
+        filename = "full_search_results/" + filename.split("/")[-1]
+        with open(filename, "w") as f:
+            f.write(line)
+            f.write("\n")
+
+    # Pretty print runs
+    with open("matching_seeds_readable.txt", 'w') as f:
+        for i, (filename, line) in enumerate(matching_runs):
+            unlocks = filename.split("/")[-1][:-4]
+            f.write(f"Unlocks: {unlocks}\n")
+            f.write(str(parse_line(line)))
+            if i < len(matching_runs) - 1:
+                f.write("=" * 50 + "\n\n")
+
+def main():
+    # Remove old results
+    try:
+        os.remove("matching_seeds.csv")
+    except FileNotFoundError:
+        pass
+    try:
+        os.remove("matching_seeds_readable.csv")
+    except FileNotFoundError:
+        pass
+    os.makedirs("full_search_results/")
+    for file in os.listdir("full_search_results/"):
+        os.remove("full_search_results/" + file)
+
+    config = load_config("config.yaml")
+    if len(sys.argv) == 1:
+        full_search(config)
+        sys.exit(0)
+    matching_runs = []
+    matching_runs.extend(find_matches(sys.argv[1], config))
+            
+    print(f"Total matching runs: {len(matching_runs)}")
+
+    # Write csv lines
+    with open("matching_seeds.csv", "w") as f:
+        f.writelines(matching_runs)
+
+    # Pretty print runs
+    with open("matching_seeds_readable.txt", 'w') as f:
         for i, line in enumerate(matching_runs):
-            f.write(str(line_to_run(line)))
+            f.write(str(parse_line(line)))
             if i < len(matching_runs) - 1:
                 f.write("=" * 50 + "\n\n")
 

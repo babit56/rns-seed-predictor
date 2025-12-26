@@ -1,9 +1,9 @@
 # Area names are hw_nest, hw_arsenal, hw_streets, hw_lighthouse, hw_lakeside
-# NOTE: not implemented atm
-# areas:
-#   0: null 
-#   1: null 
-#   2: null 
+areas:
+  0: "hw_lighthouse"
+  1: "hw_arsenal"
+  2: "hw_streets"
+  ordered: false # Whether areas should appear in the order specified
 
 ranges:
   chest_ranges:
@@ -29,3 +29,8 @@ ranges:
        required_upgrades: ["Garnet Secondary Upgrade", "Emerald Special Upgrade"]
        unique: false
        max_cost: 24
+     - start: 0
+       end: 0
+       required_upgrades: ["Garnet Defensive Upgrade"]
+       unique: false
+       max_cost: 27
