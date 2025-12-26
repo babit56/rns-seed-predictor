@@ -16,7 +16,7 @@ use std::{
 The order of priority for unlock-related flags is 1. --unlock-bitstring, 2. --no-unlocks and 3. specific sets"
 )]
 struct Cli {
-    /// Optional seed to generate. If not specificed, run for all seeds
+    /// Optional seed to generate
     #[arg(short, long)]
     seed: Option<u32>,
 
@@ -29,12 +29,12 @@ struct Cli {
     #[arg(short, long)]
     easy: bool,
 
-    /// Turn off all unlocks. Incompatiable (= ignored)
-    #[arg(long, conflicts_with_all = ["single_unlocks", "unlock_bitstring"])]
+    /// Turn off all unlocks
+    #[arg(long, conflicts_with = "unlock_bitstring")]
     no_unlocks: bool,
 
     /// Specify unlocks with a bitstring like 1100010001, where darkbite is the rightmost bit, timegem the 2nd, etc. Uses the same order as seen on the wiki. useful for debugging --full-generation output
-    #[arg(long, value_parser = parse_bitstring, conflicts_with = "single_unlocks")]
+    #[arg(long, value_parser = parse_bitstring)]
     unlock_bitstring: Option<usize>,
 
     #[command(flatten)]
@@ -52,34 +52,34 @@ struct Cli {
 
 #[derive(Args, Debug, Clone)]
 struct SingleUnlocks {
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     darkbite: bool,
 
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     timegem: bool,
 
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     youkai: bool,
 
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     haunted: bool,
 
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     gladiator: bool,
 
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     sparkblade: bool,
 
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     swiftflight: bool,
 
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     sacredflame: bool,
 
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     ruins: bool,
 
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = &["no_unlocks", "unlock_bitstring"])]
     lakeshrine: bool,
 }
 
@@ -200,7 +200,7 @@ fn main() {
     // println!("{:?}", cli);
     let unlocks = cli.get_unlocks();
     println!(
-        "Using unlocks with following bitstring: {}",
+        "Using unlocks with following bitstring: {:0>10b}",
         unlocks.get_bitstring()
     );
     if let Some(seed) = cli.seed {
