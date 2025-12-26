@@ -14,9 +14,13 @@ rns-seed-predictor --seed 1585
 # Generate unique seeds with only the Ruins and Darkbite sets unlocked and save the data in ruins-darkbite-seeds.csv
 rns-seed-predictor --ruins --darkbite -o ruins-darkbite-seeds.csv
 
-# Generate all possible combinations of unlocked sets where the ruins and darkbite sets are unlocked. Saves in full_gen/, takes ~7 min on my machine (12 threads @ 3.7GHz)
+# Generate all possible combinations of unlocked sets where the ruins and darkbite sets are unlocked. Saves in full_gen/
 rns-seed-predictor --full-generation --ruins --darkbite
 ```
+
+Generating a single csv takes ~17s on my machine (3.7GHz)
+
+The `--full-generation` option uses multiple processes, as many as possible. At most one process is spawned per unlock combination. The above example runs in ~7 min on my machine (12 cores/threads @ 3.7GHz)
 
 See README in `seed_searcher/` folder for searching through the generated seeds
 

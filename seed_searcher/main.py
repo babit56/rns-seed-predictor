@@ -1,10 +1,13 @@
 from dataclasses import dataclass
 from typing import Generator
+from multiprocessing import Pool
+from pathlib import Path
 import yaml
 import re
 import itertools
 import os
 import sys
+import functools
 
 @dataclass
 class Chest:
@@ -31,9 +34,10 @@ class Run:
     shops: tuple[Shop, ...]
     chests: tuple[Chest, ...]
     areas: tuple[str, ...]
+    outskirts: tuple[str, ...]
     
     def __str__(self) -> str:
-        lines = [f"Seed {self.seed}", ""]
+        lines = [f"Seed {self.seed}", f"Areas: {self.areas}", f"Outskirts: {self.outskirts}", ""]
         
         # Print chests
         for i, chest in enumerate(self.chests, 1):
@@ -102,8 +106,8 @@ for (id, name) in id_outskirt_list:
 def parse_line(line: str) -> Run:
     line_data = line.strip().split(',')
     seed = line_data[0]
-    areas = tuple(line_data[1:4])
-    # outskirts here
+    areas = tuple(map(lambda id: id_to_area[int(id)], line_data[1:4]))
+    outskirts = tuple(map(lambda id: id_to_outskirt[int(id)], line_data[4:7]))
     chests = tuple(
         Chest(
             contents=set(
@@ -132,7 +136,8 @@ def parse_line(line: str) -> Run:
         seed=int(seed),
         shops=shops,
         chests=chests,
-        areas=areas
+        areas=areas,
+        outskirts=outskirts,
     )
     return run
     
@@ -253,7 +258,7 @@ def matches_criteria(line: list, config: dict) -> bool:
     
     return True
 
-def find_matches(filename: str, config: dict) -> list:
+def find_matches(filename: Path, config: dict) -> list:
     matching_runs = []
     with open(filename, "r") as f:
         for line in f.readlines():
@@ -261,47 +266,53 @@ def find_matches(filename: str, config: dict) -> list:
                 matching_runs.append(line)
     return matching_runs
 
-def full_search(config: dict):
-    matching_runs = []
-    for filename in os.listdir("../full_gen"):
-        filename = "../full_gen/" + filename
-        matches = find_matches(filename, config)
-        matching_runs.extend(map(lambda x: (filename, x), matches))
-    print(f"Total matching runs: {len(matching_runs)}")
+def inner_search(path: Path, config: dict) -> tuple[Path, list]:
+    return (path, find_matches(path, config))
 
+def full_search(config: dict):
+    find = functools.partial(inner_search, config=config)
+    with Pool() as p:
+        # paths = map(lambda path: (path, config), Path("../full_gen").iterdir())
+        matching_runs = list(p.map(find, Path("../full_gen").iterdir()))
+
+    total_matches = 0
     # Write csv lines
-    for (filename, line) in matching_runs:
-        filename = "full_search_results/" + filename.split("/")[-1]
-        with open(filename, "w") as f:
-            f.write(line)
-            f.write("\n")
+    for (path, matches) in matching_runs:
+        path = Path("full_search_results/") /  path.name
+        total_matches += len(matches)
+        if len(matches) > 0:
+            with open(path, "w") as f:
+                f.writelines(matches)
 
     # Pretty print runs
     with open("matching_seeds_readable.txt", 'w') as f:
-        for i, (filename, line) in enumerate(matching_runs):
-            unlocks = filename.split("/")[-1][:-4]
-            f.write(f"Unlocks: {unlocks}\n")
-            f.write(str(parse_line(line)))
-            if i < len(matching_runs) - 1:
-                f.write("=" * 50 + "\n\n")
+        for path, matches in matching_runs:
+            unlocks = path.stem
+            for i, line in enumerate(matches):
+                f.write(f"Unlocks: {unlocks}\n")
+                f.write(str(parse_line(line)))
+                f.write("=" * 50 + "\n")
+    print(f"Total matching runs: {total_matches}")
 
+def prepare_filesystem():
+    dir = Path('.')
+    for file in dir.glob("matching*"):
+        file.unlink()
+    # try:
+    #     os.remove("matching_seeds.csv")
+    # except FileNotFoundError:
+    #     pass
+    # try:
+    #     os.remove("matching_seeds_readable.csv")
+    # except FileNotFoundError:
+    #     pass
+    results_dir = dir / "full_search_results"
+    results_dir.mkdir(exist_ok=True)
+    for file in results_dir.iterdir():
+        file.unlink()
+    
 def main():
-    # Remove old results
-    try:
-        os.remove("matching_seeds.csv")
-    except FileNotFoundError:
-        pass
-    try:
-        os.remove("matching_seeds_readable.csv")
-    except FileNotFoundError:
-        pass
-    try:
-        os.makedirs("full_search_results/")
-    except FileExistsError:
-        pass
-    for file in os.listdir("full_search_results/"):
-        os.remove("full_search_results/" + file)
-
+    prepare_filesystem()
     config = load_config("config.yaml")
     if len(sys.argv) == 1:
         full_search(config)
