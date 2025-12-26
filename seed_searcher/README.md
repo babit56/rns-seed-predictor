@@ -4,6 +4,7 @@ Full credits to dotdot for the original implementation
 Uses as many processes (cores/threads) as possible, with at most 1 process per csv
 
 ## Usage
+Install [yaml](https://pyyaml.org/wiki/PyYAMLDocumentation), via e.g. `pip install pyyaml`.
 Edit `config.yaml` to desired search parameters. As an example it currently searches for Blackstrike/Mountain staff in the first two chests (so you get both) and g2/e3 at affordable prices in the first shop
 
 ```sh
