@@ -7,11 +7,11 @@ use gamemaker_rand::GMRand;
 use types::{Chest, Gem, Potion, Shop, Unlocks};
 
 #[derive(Debug, Clone)]
-pub struct Run {
+pub struct Run<R: GMRand> {
     map_seed: u32,
     players: u8,
     high_difficulty: bool,
-    rand: GMRand,
+    rand: R,
     hallseeds: [u32; 6],   // Idk why there's 6, copied from glass' GML code
     area_list: [usize; 5], // "id", homemade
     outskirts: [(usize, usize); 5], // "id", pattern
@@ -21,13 +21,13 @@ pub struct Run {
     unlocks: Unlocks,
 }
 
-impl Run {
+impl Run<gamemaker_rand::WELL512a> {
     pub fn new(map_seed: u32, players: u8, high_difficulty: bool, unlocks: Unlocks) -> Self {
         Self {
             map_seed,
             players,
             high_difficulty,
-            rand: GMRand::new(),
+            rand: gamemaker_rand::rng(),
             hallseeds: [0; 6],
             area_list: [0, 1, 2, 3, 4],
             outskirts: [(0, 0); 5],
@@ -134,46 +134,61 @@ impl Run {
         if self.unlocks.lakeshrine  { chests[7].extend(&sets[9][4..8]); }
     }
 
+    // Called math_switch_random in RnS code
+    fn mino_choose<T: Copy>(self: &mut Self, list: &[T]) -> Option<T> {
+        if list.len() == 0 {
+            return None;
+        }
+        let rand_index: usize = self.rand.random(list.len().into()).into();
+        Some(list[rand_index])
+    }
+
     pub fn predict_seed(self: &mut Self) {
         let mut all_list = Run::get_all_list();
 
         // Hallseeds
-        self.rand.set_seed(self.map_seed);
-        self.hallseeds[0] = self.rand.irandom_range(0, 4294967295) as u32;
-        self.rand.shuffle(&mut self.area_list);
-        self.hallseeds[1] = self.rand.irandom(4294967295) as u32;
-        self.hallseeds[2] = self.rand.irandom(4294967295) as u32;
-        self.hallseeds[3] = self.rand.irandom(4294967295) as u32;
-        self.hallseeds[4] = self.rand.irandom(4294967295) as u32;
-        self.hallseeds[5] = self.rand.irandom(4294967295) as u32;
+        self.rand.set_seed(self.map_seed.into());
+        self.hallseeds[0] = self
+            .rand
+            .irandom_range(0.into(), 4294967295u32.into())
+            .into();
+        self.rand.ds_list_shuffle(&mut self.area_list);
+        self.hallseeds[1] = self.rand.irandom(4294967295u32.into()).into();
+        self.hallseeds[2] = self.rand.irandom(4294967295u32.into()).into();
+        self.hallseeds[3] = self.rand.irandom(4294967295u32.into()).into();
+        self.hallseeds[4] = self.rand.irandom(4294967295u32.into()).into();
+        self.hallseeds[5] = self.rand.irandom(4294967295u32.into()).into();
 
         // Items
-        self.rand.set_seed(self.map_seed + 5);
+        self.rand.set_seed((self.map_seed + 5).into());
 
         for list in all_list.iter_mut() {
-            self.rand.shuffle(list);
+            self.rand.ds_list_shuffle(list);
         }
 
         self.fill_color_chests(&mut all_list);
 
         for list in all_list.iter_mut() {
-            self.rand.shuffle(list);
+            self.rand.ds_list_shuffle(list);
         }
 
         // all_list up to and incl white chest, and the rest
         let (white_chest, other_chests) = all_list.split_at_mut(3);
         for i in 0..5 {
+            // TODO: does drain amount depend on whether color chest has its unlockable sets
+            // e.g. if opal is missing both sets, does it still move 8 items to white chest
+            // I'm guessing it always takes 8, there's no danger of running out of items for a chest color anyways
             white_chest[2].extend(other_chests[i].drain(0..8));
         }
 
         for list in all_list.iter_mut() {
-            self.rand.shuffle(list);
+            self.rand.ds_list_shuffle(list);
         }
 
         let mut chest_types = [2, 2, 2, 3, 4, 5, 6, 7];
         // Yes, we do shuffle twice, not a typo
-        self.rand.shuffle(&mut chest_types);
-        self.rand.shuffle(&mut chest_types);
+        self.rand.ds_list_shuffle(&mut chest_types);
+        self.rand.ds_list_shuffle(&mut chest_types);
 
         let mut white_chest_iter = all_list[2].iter();
         for (chest_index, &chest_type) in chest_types[0..6].iter().enumerate() {
@@ -208,25 +223,25 @@ impl Run {
         }
 
         // Outskirts
-        self.rand.set_seed(self.hallseeds[0]);
+        self.rand.set_seed(self.hallseeds[0].into());
         for fight in 0..5 {
-            let pattern = self.rand.mino_choose(&[0, 1]).unwrap();
+            let pattern = self.mino_choose(&[0, 1]).unwrap();
             self.outskirts[fight] = (fight, pattern);
         }
-        self.rand.shuffle(&mut self.outskirts);
+        self.rand.ds_list_shuffle(&mut self.outskirts);
 
         // Areas
         for area_index in 1..=4 {
-            self.rand.set_seed(self.hallseeds[area_index]);
+            self.rand.set_seed(self.hallseeds[area_index].into());
             if area_index == 4 {
-                self.rand.shuffle(&mut self.pale_keep);
+                self.rand.ds_list_shuffle(&mut self.pale_keep);
             }
-            let rand = self.rand.random(2147483647.0).floor() as u32;
+            let rand = self.rand.random(2147483647.0.into()).into();
             self.rand.set_seed(rand);
 
             // Potions
             let mut potion_list = all_list[19].clone();
-            self.rand.shuffle(&mut potion_list);
+            self.rand.ds_list_shuffle(&mut potion_list);
             if area_index == 1 && self.high_difficulty {
                 potion_list[0] = 489;
             }
@@ -238,7 +253,7 @@ impl Run {
                     let price = if i == 0 && area_index == 1 && self.high_difficulty {
                         8 // Regen pot always costs 8
                     } else {
-                        self.rand.irandom_range(7, 10) as usize
+                        self.rand.irandom_range(7.into(), 10.into()).into()
                     };
                     (potion_id, price)
                 })
@@ -254,9 +269,9 @@ impl Run {
                 all_list[23].clone(),
             ];
             let gems = array::from_fn(|i| {
-                self.rand.shuffle(&mut gem_lists[i]);
+                self.rand.ds_list_shuffle(&mut gem_lists[i]);
                 let gem_id = gem_lists[i][0];
-                let price = self.rand.irandom_range(23, 27) as usize;
+                let price = self.rand.irandom_range(23.into(), 27.into()).into();
                 Gem::from_id_price(gem_id, price).unwrap()
             });
 
@@ -406,7 +421,7 @@ impl Run {
     }
 }
 
-impl fmt::Display for Run {
+impl fmt::Display for Run<gamemaker_rand::WELL512a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let hallseed_string = self
             .hallseeds

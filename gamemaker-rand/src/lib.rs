@@ -1,51 +1,101 @@
 //! Simulate Gamemaker RNG
 
+// TODO: better docs, especially the structure of them
+// TODO: check how GM does casting of RValues
+// TODO: notes on well512a using u32 values internally
+// TODO: Make example "correct" version, html version, maybe more
+
 /// Corresponds to the so-called "Real Numbers" from Gamemaker.
 /// This is not an accurate representation of how Real works in GM, but it suffices for letting e.g. [`GMRand::random()`] take multiple different types
-// pub enum Real {
-//     Float(f64),
-//     Unsigned(u64),
-//     Signed(i64),
-// }
+#[derive(Debug, Clone, Copy)]
+pub enum Real {
+    Float(f64),
+    Unsigned(u64),
+    Signed(i64),
+}
 
-// impl From<f64> for Real {
-//     fn from(value: f64) -> Self {
-//         Self::Float(value)
-//     }
-// }
+// Implementing casting to/from various integer types
+macro_rules! impl_casting {
+    ($t0:ty, $variant:expr, $t1:ty) => {
+        impl From<$t0> for Real {
+            fn from(value: $t0) -> Self {
+                $variant(value as $t1)
+            }
+        }
+        impl Into<$t0> for Real {
+            fn into(self) -> $t0 {
+                match self {
+                    Real::Float(n) => n as $t0,
+                    Real::Unsigned(n) => n as $t0,
+                    Real::Signed(n) => n as $t0,
+                }
+            }
+        }
+    };
+}
 
-// pub trait GMRand {
-//     fn get_seed(&self) -> u32;
-//     fn set_seed(&mut self, seed: u32);
-//     fn random(&mut self, upper: f64) -> f64;
-//     fn random_range(&mut self, upper: f64) -> f64;
-//     fn irandom(&mut self, upper: i64) -> i64;
-//     fn irandom_range(&mut self, upper: i64) -> i64;
-// }
+impl_casting!(f32, Real::Float, f64);
+impl_casting!(f64, Real::Float, f64);
+impl_casting!(u32, Real::Unsigned, u64);
+impl_casting!(u64, Real::Unsigned, u64);
+impl_casting!(usize, Real::Unsigned, u64);
+impl_casting!(i32, Real::Signed, i64);
+impl_casting!(i64, Real::Signed, i64);
+impl_casting!(isize, Real::Signed, i64);
 
-// TODO: better docs, especially the structure of them
+/// Exposes the same functions related to randomness that Gamemaker does. Uses `Real` as the type for interacting with all member functions
+///
+/// Currently only implemented by `WELL512a`
+pub trait GMRand {
+    fn get_seed(&self) -> Real;
+    fn set_seed(&mut self, seed: Real);
+    fn random(&mut self, upper: Real) -> Real;
+    fn random_range(&mut self, lower: Real, upper: Real) -> Real;
+    fn irandom(&mut self, upper: Real) -> Real;
+    fn irandom_range(&mut self, lower: Real, upper: Real) -> Real;
+    fn choose<'list, T>(&mut self, list: &'list [T]) -> Option<&'list T>;
+    fn ds_list_shuffle<T>(&mut self, _list: &mut [T]) {
+        unimplemented!()
+    }
+    fn ds_grid_shuffle<T>(&mut self, _grid: &mut [T]) {
+        unimplemented!()
+    }
+    fn array_shuffle<T: Clone>(&mut self, array: &[T]) -> Vec<T> {
+        let mut out = array.to_vec();
+        self.ds_list_shuffle(&mut out);
+        out
+    }
+    fn array_shuffle_ext<T>(&mut self, array: &mut [T]) {
+        self.ds_list_shuffle(array);
+    }
+    /// Set seed to a "random" value (usually derived from clock or similar). Deemed irrelevant to implement, but included for completeness
+    fn randomise(&mut self) {
+        unimplemented!()
+    }
+}
 
-/// A correct Gamemaker RNG.
+/// The current Gamemaker RNG.
 ///
 /// The main PRNG is the WELL512a algorithm, in particular the implementation from Lomont 2008[^lomont].
-/// Seeding via [`set_seed()`](GMRand::set_seed) is done by a TLCG, also from Lomont 2008. Seeding via `randomize()` takes the current time, and feeds it into the same TLCG..
+/// Seeding via [`set_seed()`](WELL512a::set_seed) is done by a TLCG, also from Lomont 2008. Seeding via `randomize()` takes the current time, and feeds it into the same TLCG..
 ///
-/// The TLCG is however implemented wrong, leading to there only being 2^16 unique seeds rather than 2^32. See [`_init_random()`](GMRand::_init_random) for more details.
+/// The TLCG is however implemented wrong, leading to there only being 2^16 unique seeds rather than 2^32. See [`_init_random()`](WELL512a::_init_random) for more details.
 ///
-/// See also [`new_legacy()`](GMRand::new_legacy) for information on some differences between modern and legacy versons of GML.
+/// See also [`new_legacy()`](WELL512a::new_legacy) for information on some differences between modern and legacy versons of GML.
 ///
 /// [^lomont]: <https://lomont.org/papers/2008/Lomont_PRNG_2008.pdf>
 #[derive(Debug, Clone, Copy)]
-pub struct GMRand {
+pub struct WELL512a {
     pub seed: u32,
     pub state: [u32; 16],
     pub index: usize,
     random_poly: u32,
     tlcg_mask: u32,
+    correct_tlcg: bool,
 }
 
-impl GMRand {
-    /// Instanstiate a [`GMRand`] struct
+impl WELL512a {
+    /// Instanstiate a [`WELL512a`] struct
     pub fn new() -> Self {
         Self {
             seed: 0,
@@ -53,10 +103,11 @@ impl GMRand {
             index: 0,
             random_poly: 0xDA442D24,
             tlcg_mask: u32::MAX,
+            correct_tlcg: false,
         }
     }
 
-    /// Instanstiate a [`GMRand`] struct with legacy variables
+    /// Instanstiate a [`WELL512a`] struct with legacy variables
     ///
     /// In very old versions of Gamemaker, there were two variables relating to randomization that were allegedly different.
     /// 1. There was a typo or bad implementation in the Lomont 2008 paper were the literal `0xDA442D20` was used instead of `0xDA442D24`
@@ -71,13 +122,18 @@ impl GMRand {
     /// You can see the correct `0x7fff` mask in the variable RAND_MAX, but this variable is not used anywhere. mask in the variable RAND_MAX, but this variable is not used anywhere.
     ///
     /// [^html_source]: <https://github.com/YoYoGames/GameMaker-HTML5/blob/develop/scripts/functions/Function_Maths.js>
-    pub fn new_legacy() -> Self {
+    pub fn with_legacy() -> Self {
         Self {
-            seed: 0,
-            state: [0; 16],
-            index: 0,
             random_poly: 0xDA442D20,
             tlcg_mask: 0x7fffffff,
+            ..Self::new()
+        }
+    }
+
+    pub fn with_correct_tlcg() -> Self {
+        Self {
+            correct_tlcg: true,
+            ..Self::new()
         }
     }
 
@@ -102,20 +158,22 @@ impl GMRand {
 
         let mut temp = seed;
         for i in 0..16 {
-            temp = (temp.wrapping_mul(0x343fd).wrapping_add(0x269ec3)) >> 16 & self.tlcg_mask;
+            // temp = (temp.wrapping_mul(0x343fd).wrapping_add(0x269ec3)) >> 16 & self.tlcg_mask;
+            temp = (temp.wrapping_mul(214013).wrapping_add(2531011)) >> 16 & self.tlcg_mask;
             self.state[i] = temp;
         }
         seed
     }
 
-    // InitRandom but with correct usage of the TLCG
-    // The TLCG is literally just the one from Lomont 2008, i.e. the MS algo for rand()
+    /// InitRandom but with correct usage of the TLCG
+    /// The TLCG is literally just the one from Lomont 2008, i.e. the MS algo for rand()
     fn _init_random_correct(self: &mut Self, seed: u32) -> u32 {
         self.seed = seed;
+        self.index = 0;
 
         let mut temp = seed;
         for i in 0..16 {
-            temp = temp * 0x343fd + 0x269ec3;
+            temp = temp.wrapping_mul(214013).wrapping_add(2531011);
             self.state[i] = (temp >> 16) & 0x7FFF;
         }
         seed
@@ -188,42 +246,6 @@ impl GMRand {
     //     }
     // }
 
-    pub fn get_seed(self: &Self) -> u32 {
-        self.seed
-    }
-
-    pub fn set_seed(self: &mut Self, seed: u32) -> u32 {
-        // floor input if float
-        self._init_random(seed)
-    }
-
-    pub fn random(self: &mut Self, upper: f64) -> f64 {
-        let rand = self._get_rand() as f64;
-        (rand / 4294967296.0) * upper
-    }
-
-    pub fn random_range(self: &mut Self, lower: f64, upper: f64) -> f64 {
-        let diff = (upper - lower).abs();
-        let rand = self.random(1.0);
-        lower.min(upper) + rand * diff
-    }
-
-    pub fn irandom(self: &mut Self, upper: i64) -> i64 {
-        // upper = upper.floor() as i64;
-        let signum = if upper < 0 { -1 } else { 1 };
-        // self._get_rand_long(upper + signum) as u32 as f64
-        self._get_rand_long(upper + signum)
-    }
-
-    pub fn irandom_range(self: &mut Self, lower: i64, upper: i64) -> i64 {
-        // lower = lower.floor() as i64;
-        // upper = upper.floor() as i64;
-        let diff = (upper - lower).abs();
-        let rand = self._get_rand_long(diff + 1);
-        // (lower.min(upper) + rand) as u32 as f64
-        lower.min(upper) + rand
-    }
-
     // fn yyrandomrange(self: &mut Self, mut upper: f64) -> f64 {
     //     upper = upper.floor();
     //     let rand = self._get_rand() as f64;
@@ -234,8 +256,54 @@ impl GMRand {
     //     }
     //     rand - v1 * v3
     // }
+}
 
-    pub fn choose<T: Copy>(self: &mut Self, list: &[T]) -> Option<T> {
+impl GMRand for WELL512a {
+    fn get_seed(&self) -> Real {
+        (self.seed as u64).into()
+    }
+
+    fn set_seed(self: &mut Self, seed: Real) {
+        let seed_inner: i64 = seed.try_into().unwrap();
+        if self.correct_tlcg {
+            self._init_random_correct(seed_inner as u32);
+        } else {
+            self._init_random(seed_inner as u32);
+        }
+    }
+
+    // TODO: test what happens when NaNs are given
+    fn random(self: &mut Self, upper: Real) -> Real {
+        let upper: f64 = upper.into();
+        let rand = self._get_rand() as f64;
+        Real::Float((rand / 4294967296.0) * upper)
+    }
+
+    fn random_range(self: &mut Self, lower: Real, upper: Real) -> Real {
+        let lower: f64 = lower.into();
+        let upper: f64 = upper.into();
+        let diff = (upper - lower).abs();
+        let rand: f64 = self.random(Real::Float(1.0)).into();
+        Real::Float(lower.min(upper) + rand * diff)
+    }
+
+    fn irandom(self: &mut Self, upper: Real) -> Real {
+        let upper: i64 = upper.try_into().unwrap();
+        let signum = if upper < 0 { -1 } else { 1 };
+        // self._get_rand_long(upper + signum) as u32 as f64
+        self._get_rand_long(upper + signum).into()
+    }
+
+    fn irandom_range(&mut self, lower: Real, upper: Real) -> Real {
+        let lower: i64 = lower.try_into().unwrap();
+        let upper: i64 = upper.try_into().unwrap();
+        let diff = (upper - lower).abs();
+        let rand = self._get_rand_long(diff + 1);
+        // (lower.min(upper) + rand) as u32 as f64
+        (lower.min(upper) + rand).into()
+    }
+
+    fn choose<'l, T>(self: &mut Self, list: &'l [T]) -> Option<&'l T> {
         if list.len() == 0 {
             return None;
         }
@@ -243,22 +311,13 @@ impl GMRand {
         // Top 10 most cursed type castings
         let floored = (rand as f32).floor() as u32 as usize;
         if floored < list.len() {
-            Some(list[floored])
+            Some(&list[floored])
         } else {
-            Some(list[list.len() - 1])
+            Some(&list[list.len() - 1])
         }
     }
 
-    // Called math_switch_random in RnS code
-    pub fn mino_choose<T: Copy>(self: &mut Self, list: &[T]) -> Option<T> {
-        if list.len() == 0 {
-            return None;
-        }
-        Some(list[self.random(list.len() as f64).floor() as usize])
-    }
-
-    // ds_list_shuffle()
-    pub fn shuffle<T>(self: &mut Self, list: &mut [T]) {
+    fn ds_list_shuffle<T>(self: &mut Self, list: &mut [T]) {
         let len = list.len() as u32;
         for _ in 0..8 * list.len() {
             let index1 = self._get_rand_upper(len) as usize;
@@ -268,7 +327,12 @@ impl GMRand {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// Gets the currently used Gamemaker RNG on Windows machines
+pub fn rng() -> WELL512a {
+    WELL512a::new()
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+// }
