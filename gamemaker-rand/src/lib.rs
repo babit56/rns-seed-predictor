@@ -41,9 +41,9 @@ impl_casting!(Real::Signed, i32 as i64);
 impl_casting!(Real::Signed, i64 as i64);
 impl_casting!(Real::Signed, isize as i64);
 
-/// Exposes the same functions related to randomness that Gamemaker does. Uses `Real` as the type for interacting with all member functions
+/// Exposes the same functions related to randomness that Gamemaker does. Uses [`Real`] as the type for interacting with all member functions
 ///
-/// Currently only implemented by `WELL512a`
+/// Currently only implemented by [`WELL512a`]
 pub trait GMRand {
     fn get_seed(&self) -> Real;
     fn set_seed(&mut self, seed: Real);
@@ -75,11 +75,12 @@ pub trait GMRand {
 /// The current Gamemaker RNG.
 ///
 /// The main PRNG is the WELL512a algorithm, in particular the implementation from Lomont 2008[^lomont].
-/// Seeding via [`set_seed()`](WELL512a::set_seed) is done by a TLCG, also from Lomont 2008. Seeding via `randomize()` takes the current time, and feeds it into the same TLCG..
+/// Seeding via [`set_seed()`](WELL512a::set_seed) is done by a TLCG, also from Lomont 2008. Seeding via `randomize()` takes the current time, and feeds it into the same TLCG.
 ///
-/// The TLCG is however implemented wrong, leading to there only being 2^16 unique seeds rather than 2^32. See [`_init_random()`](WELL512a::_init_random) for more details.
+/// The TLCG is however implemented wrong, leading to there only being 2^16 unique seeds rather than 2^32. See [`new()`](WELL512a::new) for more details.
+/// An example "correct" implementation can be instantiated with [`with_correct_tlcg()`](WELL512a::with_correct_tlcg())
 ///
-/// See also [`new_legacy()`](WELL512a::new_legacy) for information on some differences between modern and legacy versons of GML.
+/// See also [`with_legacy()`](WELL512a::with_legacy) for information on some differences between modern and legacy versons of GML.
 ///
 /// [^lomont]: <https://lomont.org/papers/2008/Lomont_PRNG_2008.pdf>
 #[derive(Debug, Clone, Copy)]
@@ -94,6 +95,20 @@ pub struct WELL512a {
 
 impl WELL512a {
     /// Instanstiate a [`WELL512a`] struct
+    ///
+    /// Seeding seemingly uses the TLCG shown in Lomont 2008 [^1], which is a TLCG which is generally used a lot in Microsoft products.
+    /// However, a correct implementation would do the following:
+    /// 1. Seed the TLCG with the seed provided.
+    /// 2. Iterate the state with the LCG
+    /// 3. For each iteration, output the upper bits of the LCG output (bits 16-30 in Lomont)
+    ///
+    /// The Gamemaker implementation does the truncation *when iterating the state*,
+    /// which means only the upper bits are used for seeding WELL512a. Additionally, they seemingly use the wrong bitmask (`0x7fffffff` instead of `0x7fff`),
+    /// so they actually use bits 16-32. I don't know how much the latter bug/choice matters, but the first bug/choice means that there's only 2^16 possible initial states for WELL512a, i.e. 2^16 unique seeds.
+    /// This was reported on their bugtracker back in 2023[^2].
+    ///
+    /// [^1]: <https://lomont.org/papers/2008/Lomont_PRNG_2008.pdf>
+    /// [^2]: <https://github.com/YoYoGames/GameMaker-Bugs/issues/3006>
     pub fn new() -> Self {
         Self {
             seed: 0,
@@ -128,6 +143,7 @@ impl WELL512a {
         }
     }
 
+    /// Initialize [`WELL512a`] with a proper seeding implementation
     pub fn with_correct_tlcg() -> Self {
         Self {
             correct_tlcg: true,
@@ -135,22 +151,7 @@ impl WELL512a {
         }
     }
 
-    /// Initialize WELL512a based on a 32-bit unsigned integer.
-    ///
-    /// Seemingly uses the TLCG shown in Lomont 2008 [^1], which is a TLCG which is generally used a lot in Microsoft products.
-    /// However, a correct implementation would do the following:
-    /// 1. Seed the TLCG with the seed provided.
-    /// 2. Iterate the state with the LCG
-    /// 3. For each iteration, output the upper bits of the LCG output (bits 16-30 in Lomont)
-    ///
-    /// The Gamemaker implementation does the truncation *when iterating the state*,
-    /// which means only the upper bits are used for seeding WELL512a. Additionally, they seemingly use the wrong bitmask (`0x7fffffff` instead of `0x7fff`),
-    /// so they actually use bits 16-32. I don't know how much the latter bug/choice matters, but the first bug/choice means that there's only 2^16 possible initial states for WELL512a, i.e. 2^16 unique seeds.
-    /// This was reported on their bugtracker back in 2003[^2].
-    ///
-    /// [^1]: <https://lomont.org/papers/2008/Lomont_PRNG_2008.pdf>
-    /// [^2]: <https://github.com/YoYoGames/GameMaker-Bugs/issues/3006>
-    pub fn _init_random(self: &mut Self, seed: u32) -> u32 {
+    fn _init_random(self: &mut Self, seed: u32) -> u32 {
         self.seed = seed;
         self.index = 0;
 
