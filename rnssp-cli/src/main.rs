@@ -1,6 +1,6 @@
 use clap::{Args, Parser};
 use rayon::prelude::*;
-use rns_seed_predictor::{types::Unlocks, Run};
+use rnssp::{types::Unlocks, Run};
 use std::{
     fs::{self, File},
     io::{BufWriter, Write},

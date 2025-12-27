@@ -1,0 +1,17 @@
+[package]
+name = "rns-seed-predictor"
+version = "0.3.1"
+edition = "2021"
+authors = ["babit"]
+description = "Generate loot, shops, and fight patterns for one or all Rabbit & Steel seeds"
+repository = "https://github.com/babit56/rns-seed-predictor"
+license = "MIT"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rnssp = { path = "../rnssp" }
+clap = { version = "4.5.53", features = ["derive"] }
+derive_more = { version = "2", features = ["display"] }
+rayon = "1.11.0"

@@ -1,10 +1,9 @@
 pub mod names;
-pub mod rand;
 pub mod types;
 
 use std::{array, fmt};
 
-use rand::GMRand;
+use gamemaker_rand::GMRand;
 use types::{Chest, Gem, Potion, Shop, Unlocks};
 
 #[derive(Debug, Clone)]

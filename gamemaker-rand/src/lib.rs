@@ -1,5 +1,28 @@
 //! Simulate Gamemaker RNG
 
+/// Corresponds to the so-called "Real Numbers" from Gamemaker.
+/// This is not an accurate representation of how Real works in GM, but it suffices for letting e.g. [`GMRand::random()`] take multiple different types
+// pub enum Real {
+//     Float(f64),
+//     Unsigned(u64),
+//     Signed(i64),
+// }
+
+// impl From<f64> for Real {
+//     fn from(value: f64) -> Self {
+//         Self::Float(value)
+//     }
+// }
+
+// pub trait GMRand {
+//     fn get_seed(&self) -> u32;
+//     fn set_seed(&mut self, seed: u32);
+//     fn random(&mut self, upper: f64) -> f64;
+//     fn random_range(&mut self, upper: f64) -> f64;
+//     fn irandom(&mut self, upper: i64) -> i64;
+//     fn irandom_range(&mut self, upper: i64) -> i64;
+// }
+
 // TODO: better docs, especially the structure of them
 
 /// A correct Gamemaker RNG.
@@ -24,7 +47,7 @@ pub struct GMRand {
 impl GMRand {
     /// Instanstiate a [`GMRand`] struct
     pub fn new() -> Self {
-        GMRand {
+        Self {
             seed: 0,
             state: [0; 16],
             index: 0,
@@ -49,7 +72,7 @@ impl GMRand {
     ///
     /// [^html_source]: <https://github.com/YoYoGames/GameMaker-HTML5/blob/develop/scripts/functions/Function_Maths.js>
     pub fn new_legacy() -> Self {
-        GMRand {
+        Self {
             seed: 0,
             state: [0; 16],
             index: 0,
@@ -243,4 +266,9 @@ impl GMRand {
             list.swap(index1, index2);
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 }
