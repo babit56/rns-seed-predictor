@@ -2,5 +2,12 @@
 name = "gamemaker-rand"
 version = "0.1.0"
 edition = "2024"
+authors = ["babit"]
+description = "Rust implementation of the WELL512a PRNG used by Gamemaker, and related things"
+repository = "https://github.com/babit56/rns-seed-predictor"
+license = "MIT"
+readme = "README.md"
+keywords = ["random", "rng", "gamemaker", "well512a"]
+categories = ["algorithms", "simulation"]
 
 [dependencies]

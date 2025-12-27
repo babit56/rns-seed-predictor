@@ -1,13 +1,11 @@
 //! Simulate Gamemaker RNG
 
-// TODO: better docs, especially the structure of them
 // TODO: check how GM does casting of RValues
 // TODO: notes on well512a using u32 values internally
-// TODO: Make example "correct" version, html version, maybe more
 
 /// Corresponds to the so-called "Real Numbers" from Gamemaker.
 /// This is not an accurate representation of how Real works in GM, but it suffices for letting e.g. [`GMRand::random()`] take multiple different types
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Real {
     Float(f64),
     Unsigned(u64),
@@ -16,7 +14,7 @@ pub enum Real {
 
 // Implementing casting to/from various integer types
 macro_rules! impl_casting {
-    ($t0:ty, $variant:expr, $t1:ty) => {
+    ($variant:expr, $t0:ty as $t1:ty) => {
         impl From<$t0> for Real {
             fn from(value: $t0) -> Self {
                 $variant(value as $t1)
@@ -34,14 +32,14 @@ macro_rules! impl_casting {
     };
 }
 
-impl_casting!(f32, Real::Float, f64);
-impl_casting!(f64, Real::Float, f64);
-impl_casting!(u32, Real::Unsigned, u64);
-impl_casting!(u64, Real::Unsigned, u64);
-impl_casting!(usize, Real::Unsigned, u64);
-impl_casting!(i32, Real::Signed, i64);
-impl_casting!(i64, Real::Signed, i64);
-impl_casting!(isize, Real::Signed, i64);
+impl_casting!(Real::Float, f32 as f64);
+impl_casting!(Real::Float, f64 as f64);
+impl_casting!(Real::Unsigned, u32 as u64);
+impl_casting!(Real::Unsigned, u64 as u64);
+impl_casting!(Real::Unsigned, usize as u64);
+impl_casting!(Real::Signed, i32 as i64);
+impl_casting!(Real::Signed, i64 as i64);
+impl_casting!(Real::Signed, isize as i64);
 
 /// Exposes the same functions related to randomness that Gamemaker does. Uses `Real` as the type for interacting with all member functions
 ///
