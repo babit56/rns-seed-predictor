@@ -1,9 +1,9 @@
 # Area names are hw_nest, hw_arsenal, hw_streets, hw_lighthouse, hw_lakeside
-areas:
-  0: "hw_lighthouse"
-  1: "hw_arsenal"
-  2: "hw_streets"
-  ordered: false # Whether areas should appear in the order specified
+# areas:
+#   0: "hw_lighthouse"
+#   1: "hw_arsenal"
+#   2: "hw_streets"
+#   ordered: false # Whether areas should appear in the order specified
 
 ranges:
   chest_ranges:

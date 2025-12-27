@@ -269,11 +269,11 @@ def find_matches(filename: Path, config: dict) -> list:
 def inner_search(path: Path, config: dict) -> tuple[Path, list]:
     return (path, find_matches(path, config))
 
-def full_search(config: dict):
+def full_search(dir: Path, config: dict):
     find = functools.partial(inner_search, config=config)
     with Pool() as p:
         # paths = map(lambda path: (path, config), Path("../full_gen").iterdir())
-        matching_runs = list(p.map(find, Path("../full_gen").iterdir()))
+        matching_runs = list(p.map(find, dir.iterdir()))
 
     total_matches = 0
     # Write csv lines
@@ -315,10 +315,14 @@ def main():
     prepare_filesystem()
     config = load_config("config.yaml")
     if len(sys.argv) == 1:
-        full_search(config)
+        full_search(Path("../full_gen"), config)
+        sys.exit(0)
+    path = Path(sys.argv[1])
+    if path.is_dir():
+        full_search(path, config)
         sys.exit(0)
     matching_runs = []
-    matching_runs.extend(find_matches(sys.argv[1], config))
+    matching_runs.extend(find_matches(path, config))
             
     print(f"Total matching runs: {len(matching_runs)}")
 
