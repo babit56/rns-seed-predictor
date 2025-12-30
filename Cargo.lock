@@ -166,6 +166,12 @@ name = "gamemaker-rand"
 version = "0.1.0"
 
 [[package]]
+name = "gamemaker-rand"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b395cca4356d4fd73a8249a252f8c3d6f58706546f0d8e5a609e0673a7f80b6"
+
+[[package]]
 name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -235,7 +241,7 @@ dependencies = [
 name = "rnssp"
 version = "0.1.0"
 dependencies = [
- "gamemaker-rand",
+ "gamemaker-rand 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

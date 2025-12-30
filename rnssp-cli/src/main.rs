@@ -1,6 +1,6 @@
 use clap::{Args, Parser};
 use rayon::prelude::*;
-use rnssp::{types::Unlocks, Run};
+use rnssp::{Run, types::Unlocks};
 use std::{
     fs::{self, File},
     io::{BufWriter, Write},
@@ -115,19 +115,6 @@ fn parse_bitstring(bitstring: &str) -> Result<usize, ParseIntError> {
     usize::from_str_radix(bitstring, 2)
 }
 
-// Get enough state to tell completely whether two seeds will be equal
-// I.e. calculate the first run of the TLCG for seed and seed+5
-fn get_short_state(seed: u32) -> (u32, u32) {
-    (
-        (seed.wrapping_mul(0x343fd).wrapping_add(0x269ec3)) >> 16,
-        (seed
-            .wrapping_add(5)
-            .wrapping_mul(0x343fd)
-            .wrapping_add(0x269ec3))
-            >> 16,
-    )
-}
-
 fn get_unique_seeds() -> Vec<u32> {
     // NOTE: assumes there are 2^17 unique seeds
     let unique_seeds = 2usize.pow(17);
@@ -139,7 +126,7 @@ fn get_unique_seeds() -> Vec<u32> {
             break;
         }
         // Check if this is a new unique seed
-        let short_state = get_short_state(seed);
+        let short_state = rnssp::get_short_state(seed);
         if states.contains(&short_state) {
             continue;
         }

@@ -7,21 +7,21 @@ use gamemaker_rand::GMRand;
 use types::{Chest, Gem, Potion, Shop, Unlocks};
 
 #[derive(Debug, Clone)]
-pub struct Run<R: GMRand> {
-    map_seed: u32,
-    players: u8,
-    high_difficulty: bool,
-    rand: R,
-    hallseeds: [u32; 6],   // Idk why there's 6, copied from glass' GML code
-    area_list: [usize; 5], // "id", homemade
-    outskirts: [(usize, usize); 5], // "id", pattern
-    pale_keep: [usize; 5], // "id"
-    shops: [Option<Shop>; 4],
-    chests: [Option<Chest>; 6],
-    unlocks: Unlocks,
+pub struct Run {
+    pub map_seed: u32,
+    pub players: u8,
+    pub high_difficulty: bool,
+    rand: gamemaker_rand::WELL512a,
+    pub hallseeds: [u32; 6], // Idk why there's 6, copied from glass' GML code
+    pub area_list: [usize; 5], // "id", homemade
+    pub outskirts: [(usize, usize); 5], // "id", pattern
+    pub pale_keep: [usize; 5], // "id"
+    pub shops: [Option<Shop>; 4],
+    pub chests: [Option<Chest>; 6],
+    pub unlocks: Unlocks,
 }
 
-impl Run<gamemaker_rand::WELL512a> {
+impl Run {
     pub fn new(map_seed: u32, players: u8, high_difficulty: bool, unlocks: Unlocks) -> Self {
         Self {
             map_seed,
@@ -421,7 +421,7 @@ impl Run<gamemaker_rand::WELL512a> {
     }
 }
 
-impl fmt::Display for Run<gamemaker_rand::WELL512a> {
+impl fmt::Display for Run {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let hallseed_string = self
             .hallseeds
@@ -521,4 +521,17 @@ impl fmt::Display for Run<gamemaker_rand::WELL512a> {
         }
         Ok(())
     }
+}
+
+// Get enough state to tell completely whether two seeds will be equal
+// I.e. calculate the first run of the TLCG for seed and seed+5
+pub const fn get_short_state(seed: u32) -> (u32, u32) {
+    (
+        (seed.wrapping_mul(0x343fd).wrapping_add(0x269ec3)) >> 16,
+        (seed
+            .wrapping_add(5)
+            .wrapping_mul(0x343fd)
+            .wrapping_add(0x269ec3))
+            >> 16,
+    )
 }
