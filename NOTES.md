@@ -42,12 +42,12 @@ What (I think) RnS calls "items" are various objects a player can obtain. This i
 All the items are kept in a big list (`OBJECT_NAMES` in this repository), and the ID of an item is the index in this list.
 All these ID's are also kept in a big list of lists
 
-### The list of all list
+### The list of all item lists
 The ID for the objects mentioned above are all kept in a list of lists, roughly sorted by "type". All these lists are shuffled a couple times during item generation, which also affects shop generation (since gems and potions are kept here)
 This list contains the following
 
 1. Leftovers - big list that contains everything not used in other lists. Includes various placeholders, lvl up, heal, all gem abilities, etc
-2. Empty - No idea why it's here, could be removed since it doesn't affect RNG
+2. Empty - ~~No idea why it's here, could be removed since it doesn't affect RNG~~. Might be used as a temp? Or mods?
 3. White chest - Used to store items in white chests. Starts empty
 4. Opal chest - Used for opal chest. Starts with the two item sets that are only in opal chests
 5. Sapphire chest - See 4.
@@ -70,3 +70,16 @@ This list contains the following
 22. Secondary gem upgrades - See 21.
 22. Special gem upgrades - See 21.
 22. Defensives gem upgrades - See 21.
+
+## List of encounters
+This is (only?) used by chaotic random. ID's are derived from `global.encounterData`
+
+0. Leftovers
+1. Demo
+2. outskirts/geode
+3. normal area enemies 1 (fight nr 1)
+3. normal area enemies 2 (fight nr 2)
+5. Minibosses (fight nr 3)
+6. Bosses (final area fight)
+7. Keep/darkhall enemies
+8. Final bosses
