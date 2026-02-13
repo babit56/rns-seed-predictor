@@ -34,10 +34,9 @@ class Run:
     shops: tuple[Shop, ...]
     chests: tuple[Chest, ...]
     areas: tuple[str, ...]
-    outskirts: tuple[str, ...]
     
     def __str__(self) -> str:
-        lines = [f"Seed {self.seed}", f"Areas: {self.areas}", f"Outskirts: {self.outskirts}", ""]
+        lines = [f"Seed {self.seed}", f"Areas: {self.areas}", ""]
         
         # Print chests
         for i, chest in enumerate(self.chests, 1):
@@ -72,49 +71,37 @@ with open("ids.txt", 'r') as f:
 
 # Homemade ID's
 id_area_list = [
-    (0, "hw_nest"),
-    (1, "hw_arsenal"),
-    (2, "hw_lighthouse"),
-    (3, "hw_streets"),
-    (4, "hw_lakeside"),
+    (0, "hw_outskirts"),
+    (1, "hw_nest"),
+    (2, "hw_arsenal"),
+    (3, "hw_lighthouse"),
+    (4, "hw_streets"),
+    (5, "hw_lakeside"),
+    (6, "hw_keep"),
+    (7, "hw_geode"),
+    (8, "hw_sanct"),
+    (9, "hw_depths"),
+    (10, "hw_aurum"),
+    (11, "hw_darkhall"),
 ]
 id_to_area: dict[int, str] = {}
 area_to_id: dict[str, int] = {}
-id_outskirt_list = [
-    (11, "enc_bird_sophomore1"),
-    (12, "enc_bird_sophomore2"),
-    (21, "enc_frog_tinkerer1"),
-    (22, "enc_frog_tinkerer2"),
-    (31, "enc_dragon_granite1"),
-    (32, "enc_dragon_granite2"),
-    (41, "enc_wolf_blackear1"),
-    (42, "enc_wolf_blackear2"),
-    (51, "enc_mouse_cadet1"),
-    (52, "enc_mouse_cadet2"),
-]
-id_to_outskirt: dict[int, str] = {}
-outskirt_to_id: dict[str, int] = {}
 
 for (id, name) in id_area_list:
     id_to_area[id] = name
     area_to_id[name] = id
 
-for (id, name) in id_outskirt_list:
-    id_to_outskirt[id] = name
-    outskirt_to_id[name] = id
-
 def parse_line(line: str) -> Run:
     line_data = line.strip().split(',')
     seed = line_data[0]
-    areas = tuple(map(lambda id: id_to_area[int(id)], line_data[1:4]))
-    outskirts = tuple(map(lambda id: id_to_outskirt[int(id)], line_data[4:7]))
+    areas = tuple(map(lambda id: id_to_area[int(id)], line_data[2:5]))
     chests = tuple(
         Chest(
             contents=set(
                 id_to_name[int(item_id)]
                 for item_id in chest_data
             )
-        ) for chest_data in itertools.batched(line_data[7:37], 5)
+        ) for chest_data in itertools.batched(line_data[6:36], 5)
     )
     shops = tuple(
         Shop(
@@ -130,14 +117,13 @@ def parse_line(line: str) -> Run:
                     cost=int(cost)
                 ) for name, cost in zip(shop_data[:3], shop_data[3:6])
             )
-        ) for shop_data in itertools.batched(line_data[37:93], 14)
+        ) for shop_data in itertools.batched(line_data[36:92], 14)
     )
     run = Run(
         seed=int(seed),
         shops=shops,
         chests=chests,
         areas=areas,
-        outskirts=outskirts,
     )
     return run
     
@@ -179,11 +165,11 @@ def check_areas(line: list, config: dict):
     for i in range(3):
         area_id = str(config[i])
         if config['ordered']:
-            if line[i+1] != area_id:
+            if line[i+2] != area_id:
                 return False
         else:
             try:
-                line.index(area_id, 1, 4)
+                line.index(area_id, 2, 5)
             except ValueError:
                 return False
     return True

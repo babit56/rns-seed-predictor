@@ -1,4 +1,4 @@
-# Area names are hw_nest, hw_arsenal, hw_streets, hw_lighthouse, hw_lakeside
+# Area names are hw_nest, hw_arsenal, hw_streets, hw_lighthouse, hw_lakeside, hw_sanct, hw_depths, hw_aurum
 # areas:
 #   0: "hw_lighthouse"
 #   1: "hw_arsenal"
@@ -29,8 +29,8 @@ ranges:
        required_upgrades: ["Garnet Secondary Upgrade", "Emerald Special Upgrade"]
        unique: false
        max_cost: 24
-     - start: 0
-       end: 0
-       required_upgrades: ["Garnet Defensive Upgrade"]
-       unique: false
-       max_cost: 27
+     # - start: 0
+     #   end: 0
+     #   required_upgrades: ["Garnet Defensive Upgrade"]
+     #   unique: false
+     #   max_cost: 27

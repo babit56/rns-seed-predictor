@@ -479,7 +479,7 @@ impl Run {
         let area_string = self
             .area_list
             .iter()
-            .map(|&area| area.to_string())
+            .map(|&area| area.to_int().to_string())
             .collect::<Vec<_>>()
             .join(",");
         // TODO: Maybe add, idk it takes so much space
@@ -694,10 +694,16 @@ impl fmt::Display for Run {
 
 // Get enough state to tell completely whether two seeds will be equal
 // I.e. calculate the first run of the TLCG for seed and seed+5
-pub const fn get_short_state(seed: u32) -> (u32, u32) {
+pub const fn get_short_state(seed: u32, starting_area: StartingArea) -> (u32, u32) {
+    let add = match starting_area {
+        RandomKingdom => 1,
+        RandomExtra => 2,
+        TrueRandom => 3,
+        ChaoticRandom => 4,
+    };
     (
         (seed
-            .wrapping_add(1)
+            .wrapping_add(add)
             .wrapping_mul(0x343fd)
             .wrapping_add(0x269ec3))
             >> 16,

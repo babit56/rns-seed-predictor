@@ -186,7 +186,7 @@ fn parse_bitstring(bitstring: &str) -> Result<usize, ParseIntError> {
     usize::from_str_radix(bitstring, 2)
 }
 
-fn get_unique_seeds() -> Vec<u32> {
+fn get_unique_seeds(starting_area: StartingArea) -> Vec<u32> {
     // NOTE: assumes there are 2^17 unique seeds
     let unique_seeds = 2usize.pow(17);
     let mut states: Vec<(u32, u32)> = Vec::with_capacity(unique_seeds);
@@ -197,7 +197,7 @@ fn get_unique_seeds() -> Vec<u32> {
             break;
         }
         // Check if this is a new unique seed
-        let short_state = rnssp::get_short_state(seed);
+        let short_state = rnssp::get_short_state(seed, starting_area);
         if states.contains(&short_state) {
             continue;
         }
@@ -213,7 +213,7 @@ fn generate_csv(
     starting_area: StartingArea,
     unlocks: Unlocks,
 ) -> Vec<String> {
-    let seeds = get_unique_seeds();
+    let seeds = get_unique_seeds(starting_area);
     println!("Unique seeds enumerated, generating seeds");
     let unique_seeds = 2usize.pow(17);
     let mut lines: Vec<String> = Vec::with_capacity(unique_seeds);
@@ -242,7 +242,7 @@ fn full_generation(
 ) {
     fs::create_dir_all("full_gen")
         .expect("Expected to be able to create directory 'full_gen/' for saving csv's");
-    let seeds = get_unique_seeds();
+    let seeds = get_unique_seeds(starting_area);
     println!("Unique seeds enumerated, generating csv files");
     // Get unique combinations of Unlocks
     let unlock_combinations: Vec<Unlocks> = (0..2_usize.pow(10))

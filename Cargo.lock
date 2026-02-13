@@ -229,7 +229,7 @@ dependencies = [
 
 [[package]]
 name = "rns-seed-predictor"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "clap",
  "derive_more",
@@ -239,7 +239,7 @@ dependencies = [
 
 [[package]]
 name = "rnssp"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "gamemaker-rand 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",

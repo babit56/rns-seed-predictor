@@ -337,6 +337,25 @@ impl fmt::Display for Area {
     }
 }
 
+impl Area {
+    pub fn to_int(&self) -> usize {
+        match self {
+            Area::Outskirts => 0,
+            Area::Nest => 1,
+            Area::Arsenal => 2,
+            Area::Lighthouse => 3,
+            Area::Streets => 4,
+            Area::Lakeside => 5,
+            Area::Keep => 6,
+            Area::Geode => 7,
+            Area::Sanct => 8,
+            Area::Depths => 9,
+            Area::Aurum => 10,
+            Area::Darkhall => 11,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Encounter {
     TrainingNothing,
