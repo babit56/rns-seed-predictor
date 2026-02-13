@@ -11,6 +11,11 @@ rns-seed-predictor --help
 # Generate and print out info for the seed 1585
 rns-seed-predictor --seed 1585
 
+# Generate all unique seeds for DLC, and search through the results
+rns-seed-predictor --starting-area random-extra
+cd seed_searcher/
+python3 main.py ../unique_seeds.csv
+
 # Generate unique seeds with only the Ruins and Darkbite sets unlocked and save the data in ruins-darkbite-seeds.csv
 rns-seed-predictor --ruins --darkbite -o ruins-darkbite-seeds.csv
 
@@ -18,11 +23,12 @@ rns-seed-predictor --ruins --darkbite -o ruins-darkbite-seeds.csv
 rns-seed-predictor --full-generation --ruins --darkbite
 ```
 
+See README in `seed_searcher/` folder for more on searching through the generated seeds
+
 Generating a single csv takes ~17s on my machine (3.7GHz)
 
 The `--full-generation` option uses multiple processes, as many as possible. At most one process is spawned per unlock combination. The above example runs in ~7 min on my machine (12 cores/threads @ 3.7GHz)
 
-See README in `seed_searcher/` folder for searching through the generated seeds
 
 ## Output
 
