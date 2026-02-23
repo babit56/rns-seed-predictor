@@ -76,7 +76,7 @@ const PALE_KEEP_NAMES: [&'static str; 5] = [
     "enc_queens_harp0",
 ];
 
-const OBJECT_NAMES: [&'static str; 716] = [
+const OBJECT_NAMES: [&'static str; 717] = [
     "nothing_item",
     "???",
     "???",
@@ -773,6 +773,7 @@ const OBJECT_NAMES: [&'static str; 716] = [
     "Evasion Potion",
     "Longarm Potion",
     "Vitality Potion",
+    "Experimental Potion",
     "Opal Primary Upgrade",
     "Opal Secondary Upgrade",
     "Opal Special Upgrade",

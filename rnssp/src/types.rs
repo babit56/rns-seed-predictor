@@ -167,14 +167,14 @@ impl fmt::Display for GemType {
 
 impl Gem {
     pub fn from_id_price(gem_id: usize, price: usize) -> Result<Self, &'static str> {
-        if !(696 <= gem_id && gem_id <= 715) {
-            return Err("Gem should have ID between 696 and 715");
+        if !(697 <= gem_id && gem_id <= 716) {
+            return Err("Gem should have ID between 697 and 716");
         }
         if !(23 <= price && price <= 27) {
             return Err("Gem price should be between 23 and 27");
         }
         // Assumes gem upgrade ID's are ordered as Opal (primary) Opal (secondary) Opal Opal, Sapphire ...
-        let gem_type = GemType::try_from((gem_id - 696) / 4)?;
+        let gem_type = GemType::try_from((gem_id - 697) / 4)?;
         Ok(Self {
             gem_id,
             gem_type,
@@ -185,8 +185,8 @@ impl Gem {
 
 impl Potion {
     pub fn from_id_price(potion_id: usize, price: usize) -> Result<Self, &'static str> {
-        if !(681 <= potion_id && potion_id <= 695) {
-            return Err("Potion should have ID between 681 and 695");
+        if !(681 <= potion_id && potion_id <= 696) {
+            return Err("Potion should have ID between 681 and 696");
         }
         if !(7 <= price && price <= 10) {
             return Err("Potion price should be between 7 and 10");
