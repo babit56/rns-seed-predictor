@@ -10,9 +10,9 @@ use crate::{
 };
 
 impl Run {
-    pub fn hallwaygen_intro(self: &mut Self) {
+    pub fn hallwaygen_intro(self: &mut Self, encounter_lists: &mut [Vec<Encounter>; 9]) {
         let encs = match (self.area_list[0], self.starting_area) {
-            (_, ChaoticRandom) => self.hallwaygen_intro_chaos(),
+            (_, ChaoticRandom) => self.hallwaygen_intro_chaos(encounter_lists),
             (Area::Outskirts, _) => self.hallwaygen_outskirts(),
             (Area::Geode, _) => self.hallwaygen_geode(),
             (x, _) => panic!("Intro area should not be: {}", x),
@@ -20,9 +20,13 @@ impl Run {
         self.encounters[0..3].copy_from_slice(&encs);
     }
 
-    pub fn hallwaygen_mid(self: &mut Self, area_index: usize) -> Real {
+    pub fn hallwaygen_mid(
+        self: &mut Self,
+        area_index: usize,
+        encounter_lists: &mut [Vec<Encounter>; 9],
+    ) -> Real {
         let (encs, shop_seed) = match (self.area_list[1 + area_index], self.starting_area) {
-            (_, ChaoticRandom) => self.hallwaygen_mid_chaos(),
+            (_, ChaoticRandom) => self.hallwaygen_mid_chaos(encounter_lists),
             (Area::Nest, _) => self.hallwaygen_nest(),
             (Area::Arsenal, _) => self.hallwaygen_arsenal(),
             (Area::Lighthouse, _) => self.hallwaygen_lighthouse(),
@@ -38,14 +42,14 @@ impl Run {
         return shop_seed;
     }
 
-    pub fn hallwaygen_end(self: &mut Self) -> Real {
+    pub fn hallwaygen_end(self: &mut Self, encounter_lists: &mut [Vec<Encounter>; 9]) -> Real {
         let (encs, shop_seed) = match (self.area_list[4], self.starting_area) {
-            (_, ChaoticRandom) => self.hallwaygen_end_chaos(),
+            (_, ChaoticRandom) => self.hallwaygen_end_chaos(encounter_lists),
             (Area::Keep, _) => self.hallwaygen_keep(),
             (Area::Darkhall, _) => self.hallwaygen_darkhall(),
             (x, _) => panic!("End area should not be {}", x),
         };
-        self.encounters[15..18].copy_from_slice(&encs);
+        self.encounters[15..19].copy_from_slice(&encs);
         return shop_seed;
     }
 
@@ -276,18 +280,263 @@ impl Run {
     }
 
     fn hallwaygen_darkhall(self: &mut Self) -> ([Encounter; 4], Real) {
+        let mut darkhall = [
+            DarkhallSpelllock0,
+            DarkhallSpelllock1,
+            DarkhallSpelllock2,
+            DarkhallSpelllock3,
+            DarkhallSpelllock4,
+        ];
+        self.rand.ds_list_shuffle(&mut darkhall);
+        self.math_random_switch(&[8.0, 16.0, 32.0]).unwrap();
+        let shop_seed = self.rand.random_range(0.0.into(), 2147483647.0.into());
+
+        let mut encs = [TrainingNothing; 4];
+        encs[0..3].copy_from_slice(&darkhall[0..3]);
+        encs[3] = HeartWitch0;
+        (encs, shop_seed)
+    }
+
+    fn hallwaygen_intro_chaos(
+        self: &mut Self,
+        encounter_lists: &mut [Vec<Encounter>; 9],
+    ) -> [Encounter; 3] {
+        let possible_fights = &mut encounter_lists[2];
+        possible_fights.reverse();
+        let mut encs = [TrainingNothing; 3];
+        for i in 0..2 {
+            encs[i] = possible_fights.pop().unwrap();
+            let to_remove = match encs[i] {
+                x if [BirdSophomore0, BirdSophomore1].contains(&x) => {
+                    vec![BirdSophomore0, BirdSophomore1]
+                }
+                x if [WolfBlackear1, WolfBlackear2].contains(&x) => {
+                    vec![WolfBlackear1, WolfBlackear2]
+                }
+                x if [DragonGranite1, DragonGranite2].contains(&x) => {
+                    vec![DragonGranite1, DragonGranite2]
+                }
+                x if [MouseCadet1, MouseCadet2].contains(&x) => vec![MouseCadet1, MouseCadet2],
+                x if [FrogTinkerer1, FrogTinkerer2].contains(&x) => {
+                    vec![FrogTinkerer1, FrogTinkerer2]
+                }
+                x if [GeodeMoth0, GeodeMoth1, GeodeMoth2].contains(&x) => {
+                    vec![GeodeMoth0, GeodeMoth1, GeodeMoth2]
+                }
+                x if [GeodeFirefly0, GeodeFirefly1, GeodeFirefly2].contains(&x) => {
+                    vec![GeodeFirefly0, GeodeFirefly1, GeodeFirefly2]
+                }
+                x if [GeodeButterfly0, GeodeButterfly1, GeodeButterfly2].contains(&x) => {
+                    vec![GeodeButterfly0, GeodeButterfly1, GeodeButterfly2]
+                }
+                x => panic!("Intro fight should not be: {}", x),
+            };
+            for enc in to_remove {
+                let ind = possible_fights.iter().position(|&x| x == enc).unwrap();
+                possible_fights.remove(ind);
+            }
+        }
+
+        encs
+    }
+
+    fn hallwaygen_mid_chaos(
+        self: &mut Self,
+        encounter_lists: &mut [Vec<Encounter>; 9],
+    ) -> ([Encounter; 4], Real) {
         todo!()
     }
 
-    fn hallwaygen_intro_chaos(self: &mut Self) -> [Encounter; 3] {
+    fn hallwaygen_end_chaos(
+        self: &mut Self,
+        encounter_lists: &mut [Vec<Encounter>; 9],
+    ) -> ([Encounter; 4], Real) {
         todo!()
     }
 
-    fn hallwaygen_mid_chaos(self: &mut Self) -> ([Encounter; 4], Real) {
-        todo!()
-    }
-
-    fn hallwaygen_end_chaos(self: &mut Self) -> ([Encounter; 4], Real) {
-        todo!()
+    pub fn get_shuffled_encounter_list(self: &mut Self, is_chaos: bool) -> [Vec<Encounter>; 9] {
+        // See NOTES.md for information the contents of each list
+        let mut lists = [
+            vec![
+                Encounter::TrainingNothing,
+                Encounter::TrainingCircles,
+                Encounter::TrainingCircleSpreads,
+                Encounter::TrainingCones,
+                Encounter::TrainingConeSpreads,
+                Encounter::TrainingLine,
+                Encounter::TrainingLineSpreads,
+                Encounter::TrainingPrscircle,
+                Encounter::TrainingLinestack,
+                Encounter::TrainingLinestackFollow,
+                Encounter::TrainingSpinray,
+                Encounter::TrainingSpinfast,
+                Encounter::TrainingEnlargeBullet,
+                Encounter::TrainingEnlargeRay,
+                Encounter::TrainingColormatch,
+                Encounter::TrainingClockspot,
+                Encounter::TrainingCardinal,
+                Encounter::TrainingCleave,
+                Encounter::TrainingTether,
+                Encounter::TrainingTetherFixed,
+                Encounter::TrainingMovecheck,
+                Encounter::TrainingThorns,
+                Encounter::TrainingThornsFixed,
+                Encounter::TrainingMarching,
+                Encounter::TrainingBind,
+                Encounter::TrainingGravity,
+                Encounter::TrainingHeavy,
+                Encounter::TrainingTailwind,
+                Encounter::TrainingTeleport,
+                Encounter::TrainingTimestop,
+                Encounter::TrainingFieldlimit,
+                Encounter::TrainingFieldlimit2,
+                Encounter::TrainingDisplayorder,
+                Encounter::TrainingEnrage,
+                Encounter::TrainingTransform,
+                Encounter::TrainingTransformMinor,
+                Encounter::TrainingDark0,
+                Encounter::TrainingDark1,
+                Encounter::TrainingDark2,
+                Encounter::TrainingSteel0,
+                Encounter::TrainingSteel1,
+                Encounter::TrainingFire0,
+                Encounter::TrainingFire1,
+                Encounter::TrainingLight0,
+                Encounter::TrainingLight1,
+                Encounter::TrainingWater0,
+                Encounter::TrainingWater1,
+                Encounter::TrainingSpinningCardinal,
+                Encounter::TrainingAngelCircle,
+                Encounter::TrainingDeathwall,
+                Encounter::TrainingTargetTether,
+                Encounter::TrainingSummonButterfly,
+                Encounter::TrainingSummonFishpool,
+                Encounter::TrainingSummonJellycat,
+                Encounter::TrainingBloomRing,
+                Encounter::TrainingBlackwhiteSpawn,
+                Encounter::TrainingPlayermirror,
+                Encounter::TrainingSummonAurumsword,
+                Encounter::TrainingGemPick,
+                Encounter::TrainingAngelAppear,
+                Encounter::TrainingPatternErase,
+                Encounter::FrogTinkerer0,
+                Encounter::FrogTinkerer1,
+                Encounter::FrogTinkerer2,
+                Encounter::BirdValedictorian1,
+                Encounter::WolfSteeltooth1,
+                Encounter::DragonMythril1,
+                Encounter::MousePaladin1,
+                Encounter::FrogIdol1,
+                Encounter::RabbitQueen1,
+                Encounter::DepthsHound1,
+                Encounter::SanctOwl1,
+                Encounter::AurumBlackcat1,
+                Encounter::HeartWitch1,
+                Encounter::ToyboxSphere,
+                Encounter::ToyboxSphereAttack,
+                Encounter::ToyboxSphereMove,
+            ],
+            vec![
+                Encounter::BirdSophomore0,
+                Encounter::WolfBlackear0,
+                Encounter::DragonGranite0,
+                Encounter::MouseCadet0,
+            ],
+            vec![
+                Encounter::BirdSophomore1,
+                Encounter::BirdSophomore2,
+                Encounter::WolfBlackear1,
+                Encounter::WolfBlackear2,
+                Encounter::DragonGranite1,
+                Encounter::DragonGranite2,
+                Encounter::MouseCadet1,
+                Encounter::MouseCadet2,
+                Encounter::GeodeMoth0,
+                Encounter::GeodeMoth1,
+                Encounter::GeodeMoth2,
+                Encounter::GeodeFirefly0,
+                Encounter::GeodeFirefly1,
+                Encounter::GeodeFirefly2,
+                Encounter::GeodeButterfly0,
+                Encounter::GeodeButterfly1,
+                Encounter::GeodeButterfly2,
+            ],
+            vec![
+                Encounter::BirdStudent0,
+                Encounter::BirdStudent1,
+                Encounter::WolfGreyeye0,
+                Encounter::WolfGreyeye1,
+                Encounter::DragonGold0,
+                Encounter::DragonGold1,
+                Encounter::MouseArcher0,
+                Encounter::MouseArcher1,
+                Encounter::FrogSeamstress0,
+                Encounter::FrogSeamstress1,
+                Encounter::DepthsBasilisk0,
+                Encounter::DepthsBasilisk1,
+                Encounter::SanctSaph0,
+                Encounter::SanctSaph1,
+                Encounter::AurumWhitecat0,
+                Encounter::AurumWhitecat1,
+            ],
+            vec![
+                Encounter::BirdWhispering0,
+                Encounter::BirdWhispering1,
+                Encounter::WolfBluepaw0,
+                Encounter::WolfBluepaw1,
+                Encounter::DragonEmerald0,
+                Encounter::DragonEmerald1,
+                Encounter::MouseOakspear0,
+                Encounter::MouseOakspear1,
+                Encounter::FrogSongstress0,
+                Encounter::FrogSongstress1,
+                Encounter::DepthsBeast0,
+                Encounter::DepthsBeast1,
+                Encounter::SanctCapricorn0,
+                Encounter::SanctCapricorn1,
+                Encounter::AurumBeast0,
+                Encounter::AurumBeast1,
+            ],
+            vec![
+                Encounter::BirdArchon0,
+                Encounter::WolfSnowfur0,
+                Encounter::DragonRuby0,
+                Encounter::MouseRosemage0,
+                Encounter::FrogPainter0,
+                Encounter::DepthsAngel0,
+                Encounter::SanctFlower0,
+                Encounter::AurumGhost0,
+            ],
+            vec![
+                Encounter::BirdValedictorian0,
+                Encounter::WolfSteeltooth0,
+                Encounter::DragonMythril0,
+                Encounter::MousePaladin0,
+                Encounter::FrogIdol0,
+                Encounter::DepthsHound0,
+                Encounter::SanctOwl0,
+                Encounter::AurumBlackcat0,
+            ],
+            vec![
+                Encounter::QueensStaff0,
+                Encounter::QueensKnife0,
+                Encounter::QueensAxe0,
+                Encounter::QueensSpear0,
+                Encounter::QueensHarp0,
+                Encounter::DarkhallSpelllock0,
+                Encounter::DarkhallSpelllock1,
+                Encounter::DarkhallSpelllock2,
+                Encounter::DarkhallSpelllock3,
+                Encounter::DarkhallSpelllock4,
+            ],
+            vec![Encounter::RabbitQueen0, Encounter::HeartWitch0],
+        ];
+        if is_chaos {
+            self.rand.set_seed((self.map_seed + 3).into());
+            for list in lists.iter_mut() {
+                self.rand.ds_list_shuffle(list);
+            }
+        }
+        lists
     }
 }

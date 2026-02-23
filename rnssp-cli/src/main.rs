@@ -2,7 +2,7 @@ use clap::{Args, Parser};
 use rayon::prelude::*;
 use rnssp::{
     Run,
-    types::{StartingArea, Unlocks},
+    types::{Encounter, StartingArea, Unlocks},
 };
 use std::{
     fs::{self, File},
@@ -17,6 +17,14 @@ pub enum StartingAreaArg {
     RandomExtra,
     TrueRandom,
     ChaoticRandom,
+    Nest,
+    Arsenal,
+    Lighthouse,
+    Streets,
+    Lakeside,
+    Sanct,
+    Depths,
+    Aurum,
 }
 
 impl From<StartingAreaArg> for StartingArea {
@@ -26,6 +34,14 @@ impl From<StartingAreaArg> for StartingArea {
             StartingAreaArg::RandomExtra => StartingArea::RandomExtra,
             StartingAreaArg::TrueRandom => StartingArea::TrueRandom,
             StartingAreaArg::ChaoticRandom => StartingArea::ChaoticRandom,
+            StartingAreaArg::Nest => StartingArea::Nest,
+            StartingAreaArg::Arsenal => StartingArea::Arsenal,
+            StartingAreaArg::Lighthouse => StartingArea::Lighthouse,
+            StartingAreaArg::Streets => StartingArea::Streets,
+            StartingAreaArg::Lakeside => StartingArea::Lakeside,
+            StartingAreaArg::Sanct => StartingArea::Sanct,
+            StartingAreaArg::Depths => StartingArea::Depths,
+            StartingAreaArg::Aurum => StartingArea::Aurum,
         }
     }
 }
@@ -304,5 +320,5 @@ fn main() {
         ));
         file.write_all(csv_lines.join("\n").as_bytes())
             .expect("Expected to be able to write to file unique_seeds.csv");
-    }
+    };
 }

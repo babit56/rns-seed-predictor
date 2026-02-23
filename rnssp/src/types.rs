@@ -90,6 +90,14 @@ pub enum StartingArea {
     RandomExtra,
     TrueRandom,
     ChaoticRandom,
+    Nest,
+    Arsenal,
+    Lighthouse,
+    Streets,
+    Lakeside,
+    Sanct,
+    Depths,
+    Aurum,
 }
 
 impl TryFrom<usize> for ChestColor {
@@ -300,6 +308,50 @@ impl Unlocks {
     }
 }
 
+impl StartingArea {
+    /// Is Kingdom Random or one of the kingdom areas
+    pub fn is_kingdom(self: &Self) -> bool {
+        match self {
+            StartingArea::RandomKingdom => true,
+            StartingArea::Nest => true,
+            StartingArea::Arsenal => true,
+            StartingArea::Lighthouse => true,
+            StartingArea::Streets => true,
+            StartingArea::Lakeside => true,
+            _ => false,
+        }
+    }
+
+    /// Is Extra Random or one of the extra areas
+    pub fn is_extra(self: &Self) -> bool {
+        match self {
+            StartingArea::RandomExtra => true,
+            StartingArea::Sanct => true,
+            StartingArea::Depths => true,
+            StartingArea::Aurum => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_random(self: &Self) -> bool {
+        match self {
+            StartingArea::RandomKingdom => true,
+            StartingArea::RandomExtra => true,
+            StartingArea::TrueRandom => true,
+            StartingArea::ChaoticRandom => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_very_random(self: &Self) -> bool {
+        match self {
+            StartingArea::TrueRandom => true,
+            StartingArea::ChaoticRandom => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Area {
     Outskirts,
@@ -352,6 +404,27 @@ impl Area {
             Area::Depths => 9,
             Area::Aurum => 10,
             Area::Darkhall => 11,
+        }
+    }
+}
+
+impl TryFrom<StartingArea> for Area {
+    type Error = &'static str;
+
+    fn try_from(value: StartingArea) -> Result<Self, Self::Error> {
+        match value {
+            StartingArea::RandomKingdom
+            | StartingArea::RandomExtra
+            | StartingArea::TrueRandom
+            | StartingArea::ChaoticRandom => Err("Could not convert random StartingArea to Area"),
+            StartingArea::Nest => Ok(Area::Nest),
+            StartingArea::Arsenal => Ok(Area::Arsenal),
+            StartingArea::Lighthouse => Ok(Area::Lighthouse),
+            StartingArea::Streets => Ok(Area::Streets),
+            StartingArea::Lakeside => Ok(Area::Lakeside),
+            StartingArea::Sanct => Ok(Area::Sanct),
+            StartingArea::Depths => Ok(Area::Depths),
+            StartingArea::Aurum => Ok(Area::Aurum),
         }
     }
 }
@@ -682,5 +755,173 @@ impl fmt::Display for Encounter {
             Encounter::ToyboxSphereMove => "enc_toybox_sphere_move",
         };
         write!(f, "{}", string)
+    }
+}
+
+impl TryFrom<usize> for Encounter {
+    type Error = &'static str;
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Encounter::TrainingNothing),
+            1 => Ok(Encounter::TrainingCircles),
+            2 => Ok(Encounter::TrainingCircleSpreads),
+            3 => Ok(Encounter::TrainingCones),
+            4 => Ok(Encounter::TrainingConeSpreads),
+            5 => Ok(Encounter::TrainingLine),
+            6 => Ok(Encounter::TrainingLineSpreads),
+            7 => Ok(Encounter::TrainingPrscircle),
+            8 => Ok(Encounter::TrainingLinestack),
+            9 => Ok(Encounter::TrainingLinestackFollow),
+            10 => Ok(Encounter::TrainingSpinray),
+            11 => Ok(Encounter::TrainingSpinfast),
+            12 => Ok(Encounter::TrainingEnlargeBullet),
+            13 => Ok(Encounter::TrainingEnlargeRay),
+            14 => Ok(Encounter::TrainingColormatch),
+            15 => Ok(Encounter::TrainingClockspot),
+            16 => Ok(Encounter::TrainingCardinal),
+            17 => Ok(Encounter::TrainingCleave),
+            18 => Ok(Encounter::TrainingTether),
+            19 => Ok(Encounter::TrainingTetherFixed),
+            20 => Ok(Encounter::TrainingMovecheck),
+            21 => Ok(Encounter::TrainingThorns),
+            22 => Ok(Encounter::TrainingThornsFixed),
+            23 => Ok(Encounter::TrainingMarching),
+            24 => Ok(Encounter::TrainingBind),
+            25 => Ok(Encounter::TrainingGravity),
+            26 => Ok(Encounter::TrainingHeavy),
+            27 => Ok(Encounter::TrainingTailwind),
+            28 => Ok(Encounter::TrainingTeleport),
+            29 => Ok(Encounter::TrainingTimestop),
+            30 => Ok(Encounter::TrainingFieldlimit),
+            31 => Ok(Encounter::TrainingFieldlimit2),
+            32 => Ok(Encounter::TrainingDisplayorder),
+            33 => Ok(Encounter::TrainingEnrage),
+            34 => Ok(Encounter::TrainingTransform),
+            35 => Ok(Encounter::TrainingTransformMinor),
+            36 => Ok(Encounter::TrainingDark0),
+            37 => Ok(Encounter::TrainingDark1),
+            38 => Ok(Encounter::TrainingDark2),
+            39 => Ok(Encounter::TrainingSteel0),
+            40 => Ok(Encounter::TrainingSteel1),
+            41 => Ok(Encounter::TrainingFire0),
+            42 => Ok(Encounter::TrainingFire1),
+            43 => Ok(Encounter::TrainingLight0),
+            44 => Ok(Encounter::TrainingLight1),
+            45 => Ok(Encounter::TrainingWater0),
+            46 => Ok(Encounter::TrainingWater1),
+            47 => Ok(Encounter::TrainingSpinningCardinal),
+            48 => Ok(Encounter::TrainingAngelCircle),
+            49 => Ok(Encounter::TrainingDeathwall),
+            50 => Ok(Encounter::TrainingTargetTether),
+            51 => Ok(Encounter::TrainingSummonButterfly),
+            52 => Ok(Encounter::TrainingSummonFishpool),
+            53 => Ok(Encounter::TrainingSummonJellycat),
+            54 => Ok(Encounter::TrainingBloomRing),
+            55 => Ok(Encounter::TrainingBlackwhiteSpawn),
+            56 => Ok(Encounter::TrainingPlayermirror),
+            57 => Ok(Encounter::TrainingSummonAurumsword),
+            58 => Ok(Encounter::TrainingGemPick),
+            59 => Ok(Encounter::TrainingAngelAppear),
+            60 => Ok(Encounter::TrainingPatternErase),
+            61 => Ok(Encounter::BirdSophomore0),
+            62 => Ok(Encounter::BirdSophomore1),
+            63 => Ok(Encounter::BirdSophomore2),
+            64 => Ok(Encounter::WolfBlackear0),
+            65 => Ok(Encounter::WolfBlackear1),
+            66 => Ok(Encounter::WolfBlackear2),
+            67 => Ok(Encounter::DragonGranite0),
+            68 => Ok(Encounter::DragonGranite1),
+            69 => Ok(Encounter::DragonGranite2),
+            70 => Ok(Encounter::MouseCadet0),
+            71 => Ok(Encounter::MouseCadet1),
+            72 => Ok(Encounter::MouseCadet2),
+            73 => Ok(Encounter::FrogTinkerer0),
+            74 => Ok(Encounter::FrogTinkerer1),
+            75 => Ok(Encounter::FrogTinkerer2),
+            76 => Ok(Encounter::BirdStudent0),
+            77 => Ok(Encounter::BirdStudent1),
+            78 => Ok(Encounter::BirdWhispering0),
+            79 => Ok(Encounter::BirdWhispering1),
+            80 => Ok(Encounter::BirdArchon0),
+            81 => Ok(Encounter::BirdValedictorian0),
+            82 => Ok(Encounter::BirdValedictorian1),
+            83 => Ok(Encounter::WolfGreyeye0),
+            84 => Ok(Encounter::WolfGreyeye1),
+            85 => Ok(Encounter::WolfBluepaw0),
+            86 => Ok(Encounter::WolfBluepaw1),
+            87 => Ok(Encounter::WolfSnowfur0),
+            88 => Ok(Encounter::WolfSteeltooth0),
+            89 => Ok(Encounter::WolfSteeltooth1),
+            90 => Ok(Encounter::DragonGold0),
+            91 => Ok(Encounter::DragonGold1),
+            92 => Ok(Encounter::DragonEmerald0),
+            93 => Ok(Encounter::DragonEmerald1),
+            94 => Ok(Encounter::DragonRuby0),
+            95 => Ok(Encounter::DragonMythril0),
+            96 => Ok(Encounter::DragonMythril1),
+            97 => Ok(Encounter::MouseArcher0),
+            98 => Ok(Encounter::MouseArcher1),
+            99 => Ok(Encounter::MouseOakspear0),
+            100 => Ok(Encounter::MouseOakspear1),
+            101 => Ok(Encounter::MouseRosemage0),
+            102 => Ok(Encounter::MousePaladin0),
+            103 => Ok(Encounter::MousePaladin1),
+            104 => Ok(Encounter::FrogSeamstress0),
+            105 => Ok(Encounter::FrogSeamstress1),
+            106 => Ok(Encounter::FrogSongstress0),
+            107 => Ok(Encounter::FrogSongstress1),
+            108 => Ok(Encounter::FrogPainter0),
+            109 => Ok(Encounter::FrogIdol0),
+            110 => Ok(Encounter::FrogIdol1),
+            111 => Ok(Encounter::QueensStaff0),
+            112 => Ok(Encounter::QueensKnife0),
+            113 => Ok(Encounter::QueensAxe0),
+            114 => Ok(Encounter::QueensSpear0),
+            115 => Ok(Encounter::QueensHarp0),
+            116 => Ok(Encounter::RabbitQueen0),
+            117 => Ok(Encounter::RabbitQueen1),
+            118 => Ok(Encounter::GeodeMoth0),
+            119 => Ok(Encounter::GeodeMoth1),
+            120 => Ok(Encounter::GeodeMoth2),
+            121 => Ok(Encounter::GeodeFirefly0),
+            122 => Ok(Encounter::GeodeFirefly1),
+            123 => Ok(Encounter::GeodeFirefly2),
+            124 => Ok(Encounter::GeodeButterfly0),
+            125 => Ok(Encounter::GeodeButterfly1),
+            126 => Ok(Encounter::GeodeButterfly2),
+            127 => Ok(Encounter::DepthsBasilisk0),
+            128 => Ok(Encounter::DepthsBasilisk1),
+            129 => Ok(Encounter::DepthsBeast0),
+            130 => Ok(Encounter::DepthsBeast1),
+            131 => Ok(Encounter::DepthsAngel0),
+            132 => Ok(Encounter::DepthsHound0),
+            133 => Ok(Encounter::DepthsHound1),
+            134 => Ok(Encounter::SanctSaph0),
+            135 => Ok(Encounter::SanctSaph1),
+            136 => Ok(Encounter::SanctCapricorn0),
+            137 => Ok(Encounter::SanctCapricorn1),
+            138 => Ok(Encounter::SanctFlower0),
+            139 => Ok(Encounter::SanctOwl0),
+            140 => Ok(Encounter::SanctOwl1),
+            141 => Ok(Encounter::AurumWhitecat0),
+            142 => Ok(Encounter::AurumWhitecat1),
+            143 => Ok(Encounter::AurumBeast0),
+            144 => Ok(Encounter::AurumBeast1),
+            145 => Ok(Encounter::AurumGhost0),
+            146 => Ok(Encounter::AurumBlackcat0),
+            147 => Ok(Encounter::AurumBlackcat1),
+            148 => Ok(Encounter::DarkhallSpelllock0),
+            149 => Ok(Encounter::DarkhallSpelllock1),
+            150 => Ok(Encounter::DarkhallSpelllock2),
+            151 => Ok(Encounter::DarkhallSpelllock3),
+            152 => Ok(Encounter::DarkhallSpelllock4),
+            153 => Ok(Encounter::HeartWitch0),
+            154 => Ok(Encounter::HeartWitch1),
+            155 => Ok(Encounter::ToyboxSphere),
+            156 => Ok(Encounter::ToyboxSphereAttack),
+            157 => Ok(Encounter::ToyboxSphereMove),
+            _ => Err("Got a bad Encounter ID"),
+        }
     }
 }

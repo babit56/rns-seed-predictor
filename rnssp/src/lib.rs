@@ -7,9 +7,7 @@ use std::{array, fmt};
 use gamemaker_rand::{GMRand, Real, rng};
 use types::{
     Area::{self, *},
-    Chest, Encounter, Gem, Potion, Shop,
-    StartingArea::{self, *},
-    Unlocks,
+    Chest, Encounter, Gem, Potion, Shop, StartingArea, Unlocks,
 };
 
 #[cfg_attr(
@@ -137,86 +135,86 @@ impl Run {
         ]
     }
 
-    fn get_all_encounter_list() -> [Vec<usize>; 9] {
-        // See NOTES.md for information the contents of each list
-        [
-            vec![
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
-                23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-                44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 73, 74, 75, 82,
-                89, 96, 103, 110, 117, 133, 140, 147, 154, 155, 156, 157,
-            ],
-            vec![61, 64, 67, 70],
-            vec![
-                62, 63, 65, 66, 68, 69, 71, 72, 118, 119, 120, 121, 122, 123, 124, 125, 126,
-            ],
-            vec![
-                76, 77, 83, 84, 90, 91, 97, 98, 104, 105, 127, 128, 134, 135, 141, 142,
-            ],
-            vec![
-                78, 79, 85, 86, 92, 93, 99, 100, 106, 107, 129, 130, 136, 137, 143, 144,
-            ],
-            vec![80, 87, 94, 101, 108, 131, 138, 145],
-            vec![81, 88, 95, 102, 109, 132, 139, 146],
-            vec![111, 112, 113, 114, 115, 148, 149, 150, 151, 152],
-            vec![116, 153],
-        ]
-    }
-
     /// See `scr_hallwayprogress_choose_halls`
-    // TODO: If not random, use map_seed instead and shuffle areas before getting hallseeds
     fn fill_area_list(self: &mut Self) {
         let seed = match self.starting_area {
-            RandomKingdom => self.map_seed + 1,
-            RandomExtra => self.map_seed + 2,
-            TrueRandom => self.map_seed + 3,
-            ChaoticRandom => self.map_seed + 4,
+            StartingArea::RandomKingdom => self.map_seed + 1,
+            StartingArea::RandomExtra => self.map_seed + 2,
+            StartingArea::TrueRandom => self.map_seed + 3,
+            StartingArea::ChaoticRandom => self.map_seed + 4,
+            _ => self.map_seed,
         };
         self.rand.set_seed(seed.into());
 
         // Outskirts/geode
-        let intro_area = match self.starting_area {
-            RandomKingdom => Outskirts,
-            RandomExtra => Geode,
-            TrueRandom | ChaoticRandom => self.math_random_switch(&[Outskirts, Geode]).unwrap(),
+        let intro_area = if self.starting_area.is_kingdom() {
+            Outskirts
+        } else if self.starting_area.is_extra() {
+            Geode
+        } else if self.starting_area.is_very_random() {
+            self.math_random_switch(&[Outskirts, Geode]).unwrap()
+        } else {
+            panic!(
+                "Starting area had unexpected value {:?}",
+                self.starting_area
+            );
         };
-        self.hallseeds[0] = self.rand.irandom(0xFFFFFFFFu32.into()).into();
 
         // Areas
-        let mut possible_areas = match self.starting_area {
-            RandomKingdom => vec![Nest, Arsenal, Lighthouse, Streets, Lakeside],
-            RandomExtra => vec![Sanct, Depths, Aurum],
-            TrueRandom | ChaoticRandom => vec![
+        let mut possible_areas = if self.starting_area.is_kingdom() {
+            vec![Nest, Arsenal, Lighthouse, Streets, Lakeside]
+        } else if self.starting_area.is_extra() {
+            vec![Sanct, Depths, Aurum]
+        } else if self.starting_area.is_very_random() {
+            vec![
                 Nest, Arsenal, Lighthouse, Streets, Lakeside, Sanct, Depths, Aurum,
-            ],
+            ]
+        } else {
+            panic!(
+                "Starting area had unexpected value {:?}",
+                self.starting_area
+            );
         };
-        self.rand.ds_list_shuffle(&mut possible_areas);
+
+        let mut areas: [Area; 3] = [Outskirts; 3];
+        if self.starting_area.is_random() {
+            self.hallseeds[0] = self.rand.irandom(0xFFFFFFFFu32.into()).into();
+            self.rand.ds_list_shuffle(&mut possible_areas);
+            areas.copy_from_slice(&possible_areas[0..3]);
+        } else {
+            self.rand.ds_list_shuffle(&mut possible_areas);
+            self.hallseeds[0] = self.rand.irandom(0xFFFFFFFFu32.into()).into();
+            areas = [
+                self.starting_area
+                    .try_into()
+                    .expect("Expected starting area to be non-random"),
+                possible_areas[0],
+                possible_areas[1],
+            ]
+        }
+
+        // Areas
         self.hallseeds[1] = self.rand.irandom(0xFFFFFFFFu32.into()).into();
         self.hallseeds[2] = self.rand.irandom(0xFFFFFFFFu32.into()).into();
         self.hallseeds[3] = self.rand.irandom(0xFFFFFFFFu32.into()).into();
 
         // End area/boss area
-        let end_area = match self.starting_area {
-            RandomKingdom => Keep,
-            RandomExtra => Darkhall,
-            TrueRandom | ChaoticRandom => {
-                if self.math_coinflip() {
-                    Keep
-                } else {
-                    Darkhall
-                }
-            }
+        let end_area = if self.starting_area.is_kingdom() {
+            Keep
+        } else if self.starting_area.is_extra() {
+            Darkhall
+        } else if self.starting_area.is_very_random() {
+            if self.math_coinflip() { Keep } else { Darkhall }
+        } else {
+            panic!(
+                "Starting area had unexpected value {:?}",
+                self.starting_area
+            );
         };
         self.hallseeds[4] = self.rand.irandom(0xFFFFFFFFu32.into()).into();
         self.hallseeds[5] = self.rand.irandom(0xFFFFFFFFu32.into()).into();
 
-        self.area_list = [
-            intro_area,
-            possible_areas[0],
-            possible_areas[1],
-            possible_areas[2],
-            end_area,
-        ];
+        self.area_list = [intro_area, areas[0], areas[1], areas[2], end_area];
     }
 
     /// See `scr_hallwayprogress_add_unlocks`
@@ -392,12 +390,8 @@ impl Run {
         let mut all_list = Run::get_all_items_list();
 
         // See `scr_hallwayprogress_shuffle_encounters`
-        self.rand.set_seed((self.map_seed + 3).into());
-        let encounter_lists = Run::get_all_encounter_list();
-        for mut list in encounter_lists {
-            self.rand.ds_list_shuffle(&mut list);
-        }
-
+        let mut encounter_lists =
+            self.get_shuffled_encounter_list(self.starting_area == StartingArea::ChaoticRandom);
         self.fill_area_list();
 
         // Items, see `scr_hallwayprogress_shuffle_items`
@@ -459,18 +453,19 @@ impl Run {
 
         // Intro area
         self.rand.set_seed(self.hallseeds[0].into());
-        self.hallwaygen_intro();
+        self.hallwaygen_intro(&mut encounter_lists);
 
         // Areas
         for area_index in 0..3 {
             self.rand.set_seed(self.hallseeds[area_index + 1].into());
-            let shop_seed = self.hallwaygen_mid(area_index);
+            let shop_seed = self.hallwaygen_mid(area_index, &mut encounter_lists);
             self.generate_shop(area_index, shop_seed, &mut all_list);
         }
 
         // End area
         self.rand.set_seed(self.hallseeds[4].into());
-        self.generate_shop(3, 0.into(), &mut all_list);
+        let shop_seed = self.hallwaygen_end(&mut encounter_lists);
+        self.generate_shop(3, shop_seed, &mut all_list);
     }
 
     pub fn get_csv_line(self: &Self) -> String {
@@ -696,10 +691,11 @@ impl fmt::Display for Run {
 // I.e. calculate the first run of the TLCG for seed and seed+5
 pub const fn get_short_state(seed: u32, starting_area: StartingArea) -> (u32, u32) {
     let add = match starting_area {
-        RandomKingdom => 1,
-        RandomExtra => 2,
-        TrueRandom => 3,
-        ChaoticRandom => 4,
+        StartingArea::RandomKingdom => 1,
+        StartingArea::RandomExtra => 2,
+        StartingArea::TrueRandom => 3,
+        StartingArea::ChaoticRandom => 4,
+        _ => 0,
     };
     (
         (seed
