@@ -214,8 +214,8 @@ def check_shops(line: list, config: dict) -> bool:
         unique = range_config.get('unique', False)
         max_cost = range_config.get('max_cost', None)
         
-        start_index = 37 + start * 14
-        end_index = 37 + end * 14 + 14
+        start_index = 28 + start * 14
+        end_index = 28 + end * 14 + 14
         used_shops = []
         for required_upgrade in required_upgrades:
             try:
@@ -226,7 +226,7 @@ def check_shops(line: list, config: dict) -> bool:
             if int(line[index+1]) > max_cost:
                 # Price was too high
                 return False
-            shop_index = (index - 37) // 14
+            shop_index = (index - 28) // 14
             if unique and shop_index in used_shops:
                 # Upgrades weren't in seperate shops
                 return False
