@@ -368,7 +368,6 @@ pub enum Area {
     Darkhall,
 }
 
-// TODO: Use debug impl for these names, display for pretty names
 impl fmt::Display for Area {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let string = match self {
@@ -404,6 +403,25 @@ impl Area {
             Area::Depths => 9,
             Area::Aurum => 10,
             Area::Darkhall => 11,
+        }
+    }
+
+    pub fn pretty_name(&self) -> &'static str {
+        match self {
+            Area::Outskirts => "Kingdom Outskirts",
+            Area::Nest => "Scholar's Nest",
+            Area::Arsenal => "King's Aresenal",
+            Area::Lighthouse => "Red Darkhouse",
+            Area::Streets => "Churchmouse Streets",
+            Area::Lakeside => "Emerald Lakeside",
+            Area::Keep => "Moonlit Prescipice",
+            Area::Geode => "Crack in the Geode",
+            Area::Sanct => "Subterra Sanctum",
+            Area::Depths => "Darkhouse Depths",
+            Area::Aurum => "Atelier Aurum",
+            Area::Darkhall => "Looping Hallway",
+            // extra_moonlit_prescipice: 'Moonlit Prescipice',
+            // extra_reflection: 'Reflecting Pool',
         }
     }
 }
@@ -589,9 +607,11 @@ pub enum Encounter {
     ToyboxSphere,
     ToyboxSphereAttack,
     ToyboxSphereMove,
+    ToyboxSphereTwo,
+    ToyboxSphereFour,
+    ToyboxSphereSummon,
 }
 
-// TODO: Use debug impl for these names, display for pretty names
 impl fmt::Display for Encounter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let string = match self {
@@ -753,6 +773,9 @@ impl fmt::Display for Encounter {
             Encounter::ToyboxSphere => "enc_toybox_sphere",
             Encounter::ToyboxSphereAttack => "enc_toybox_sphere_attack",
             Encounter::ToyboxSphereMove => "enc_toybox_sphere_move",
+            Encounter::ToyboxSphereTwo => "enc_toybox_sphere_two",
+            Encounter::ToyboxSphereFour => "enc_toybox_sphere_four",
+            Encounter::ToyboxSphereSummon => "enc_toybox_sphere_summon",
         };
         write!(f, "{}", string)
     }
@@ -922,6 +945,15 @@ impl TryFrom<usize> for Encounter {
             156 => Ok(Encounter::ToyboxSphereAttack),
             157 => Ok(Encounter::ToyboxSphereMove),
             _ => Err("Got a bad Encounter ID"),
+        }
+    }
+}
+
+impl Encounter {
+    // TODO: make reasonable names for each pattern
+    pub fn pretty_name(&self) -> String {
+        match self {
+            _ => self.to_string(),
         }
     }
 }

@@ -378,6 +378,7 @@ impl Run {
         if true { rand < 50.0 } else { rand >= 50.0 }
     }
 
+    #[allow(dead_code)]
     fn math_random_sign(self: &mut Self) -> Real {
         if Into::<f64>::into(self.rand.random(100.0.into())) >= 50.0 {
             1.into()
@@ -606,13 +607,13 @@ impl fmt::Display for Run {
         let area_string = self
             .area_list
             .iter()
-            .map(|&area| area.to_string())
+            .map(|&area| area.pretty_name())
             .collect::<Vec<_>>()
             .join(", ");
         let enc_string = self
             .encounters
             .iter()
-            .map(|&encounter| encounter.to_string())
+            .map(|&encounter| encounter.pretty_name())
             .collect::<Vec<_>>()
             .join(", ");
         let difficulty_string = if self.high_difficulty {

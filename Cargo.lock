@@ -239,7 +239,7 @@ dependencies = [
 
 [[package]]
 name = "rnssp"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "gamemaker-rand 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",

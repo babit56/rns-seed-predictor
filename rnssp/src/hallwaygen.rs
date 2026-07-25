@@ -44,7 +44,7 @@ impl Run {
 
     pub fn hallwaygen_end(self: &mut Self, encounter_lists: &mut [Vec<Encounter>; 9]) -> Real {
         let (encs, shop_seed) = match (self.area_list[4], self.starting_area) {
-            (_, ChaoticRandom) => self.hallwaygen_end_chaos(encounter_lists),
+            (x, ChaoticRandom) => self.hallwaygen_end_chaos(encounter_lists, x == Area::Keep),
             (Area::Keep, _) => self.hallwaygen_keep(),
             (Area::Darkhall, _) => self.hallwaygen_darkhall(),
             (x, _) => panic!("End area should not be {}", x),
@@ -302,13 +302,12 @@ impl Run {
         encounter_lists: &mut [Vec<Encounter>; 9],
     ) -> [Encounter; 3] {
         let possible_fights = &mut encounter_lists[2];
-        possible_fights.reverse();
         let mut encs = [TrainingNothing; 3];
-        for i in 0..2 {
+        for i in 0..3 {
             encs[i] = possible_fights.pop().unwrap();
             let to_remove = match encs[i] {
-                x if [BirdSophomore0, BirdSophomore1].contains(&x) => {
-                    vec![BirdSophomore0, BirdSophomore1]
+                x if [BirdSophomore1, BirdSophomore2].contains(&x) => {
+                    vec![BirdSophomore1, BirdSophomore2]
                 }
                 x if [WolfBlackear1, WolfBlackear2].contains(&x) => {
                     vec![WolfBlackear1, WolfBlackear2]
@@ -332,8 +331,9 @@ impl Run {
                 x => panic!("Intro fight should not be: {}", x),
             };
             for enc in to_remove {
-                let ind = possible_fights.iter().position(|&x| x == enc).unwrap();
-                possible_fights.remove(ind);
+                if let Some(ind) = possible_fights.iter().position(|&x| x == enc) {
+                    possible_fights.remove(ind);
+                }
             }
         }
 
@@ -344,14 +344,42 @@ impl Run {
         self: &mut Self,
         encounter_lists: &mut [Vec<Encounter>; 9],
     ) -> ([Encounter; 4], Real) {
-        todo!()
+        let mut encs = [TrainingNothing; 4];
+        self.math_random_switch(&[8, 16, 32]);
+        let shop_seed = self.rand.random_range(0.0.into(), 2147483647.0.into());
+        for i in 0..2 {
+            let possible_fights = if self.math_coinflip() {
+                &mut encounter_lists[3]
+            } else {
+                &mut encounter_lists[4]
+            };
+            encs[i] = possible_fights.pop().unwrap();
+            self.rand.random_range(0.0.into(), 2147483647.0.into());
+        }
+        encs[2] = encounter_lists[5].pop().unwrap();
+        encs[3] = encounter_lists[6].pop().unwrap();
+
+        (encs, shop_seed)
     }
 
     fn hallwaygen_end_chaos(
         self: &mut Self,
         encounter_lists: &mut [Vec<Encounter>; 9],
+        is_keep: bool,
     ) -> ([Encounter; 4], Real) {
-        todo!()
+        let possible_fights = &mut encounter_lists[7];
+        let mut encs = [TrainingNothing; 4];
+        self.math_random_switch(&[8, 16, 32]);
+        let shop_seed = self.rand.random_range(0.0.into(), 2147483647.0.into());
+        for i in 0..3 {
+            encs[i] = possible_fights.pop().unwrap();
+        }
+        if is_keep {
+            encs[3] = RabbitQueen0;
+        } else {
+            encs[3] = HeartWitch0;
+        }
+        (encs, shop_seed)
     }
 
     pub fn get_shuffled_encounter_list(self: &mut Self, is_chaos: bool) -> [Vec<Encounter>; 9] {
@@ -419,9 +447,6 @@ impl Run {
                 Encounter::TrainingGemPick,
                 Encounter::TrainingAngelAppear,
                 Encounter::TrainingPatternErase,
-                Encounter::FrogTinkerer0,
-                Encounter::FrogTinkerer1,
-                Encounter::FrogTinkerer2,
                 Encounter::BirdValedictorian1,
                 Encounter::WolfSteeltooth1,
                 Encounter::DragonMythril1,
@@ -435,12 +460,16 @@ impl Run {
                 Encounter::ToyboxSphere,
                 Encounter::ToyboxSphereAttack,
                 Encounter::ToyboxSphereMove,
+                Encounter::ToyboxSphereTwo,
+                Encounter::ToyboxSphereFour,
+                Encounter::ToyboxSphereSummon,
             ],
             vec![
                 Encounter::BirdSophomore0,
                 Encounter::WolfBlackear0,
                 Encounter::DragonGranite0,
                 Encounter::MouseCadet0,
+                Encounter::FrogTinkerer0,
             ],
             vec![
                 Encounter::BirdSophomore1,
@@ -451,6 +480,8 @@ impl Run {
                 Encounter::DragonGranite2,
                 Encounter::MouseCadet1,
                 Encounter::MouseCadet2,
+                Encounter::FrogTinkerer1,
+                Encounter::FrogTinkerer2,
                 Encounter::GeodeMoth0,
                 Encounter::GeodeMoth1,
                 Encounter::GeodeMoth2,
@@ -535,6 +566,7 @@ impl Run {
             self.rand.set_seed((self.map_seed + 3).into());
             for list in lists.iter_mut() {
                 self.rand.ds_list_shuffle(list);
+                list.reverse(); // Reverse so we can .pop() out elements
             }
         }
         lists

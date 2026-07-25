@@ -2,7 +2,7 @@ use clap::{Args, Parser};
 use rayon::prelude::*;
 use rnssp::{
     Run,
-    types::{Encounter, StartingArea, Unlocks},
+    types::{StartingArea, Unlocks},
 };
 use std::{
     fs::{self, File},
