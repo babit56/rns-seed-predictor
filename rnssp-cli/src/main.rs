@@ -261,14 +261,14 @@ fn full_generation(
     let seeds = get_unique_seeds(starting_area);
     println!("Unique seeds enumerated, generating csv files");
     // Get unique combinations of Unlocks
-    let unlock_combinations: Vec<Unlocks> = (0..2_usize.pow(10))
+    let unlock_combinations: Vec<Unlocks> = (0..2_usize.pow(20))
         .into_iter()
         .filter(|num| num & unlock_mask == unlock_mask)
         .map(|bitstring| Unlocks::from_bitstring(bitstring))
         .collect();
     // Generate csv file for each Unlocks
     unlock_combinations.into_par_iter().for_each(|unlocks| {
-        let path = format!("full_gen/{:0>10b}.csv", unlocks.get_bitstring());
+        let path = format!("full_gen/{:0>20b}.csv", unlocks.get_bitstring());
         let file = File::create(path).unwrap();
         let mut writer = BufWriter::new(file);
         for seed in &seeds {
@@ -302,7 +302,7 @@ fn main() {
     } else if cli.full_generation {
         println!(
             "Generating csv's for all combinations of given unlocks, in total {} csv's",
-            2_usize.pow(10 - unlocks.get_bitstring().count_ones())
+            2_usize.pow(20 - unlocks.get_bitstring().count_ones())
         );
         let unlock_mask = cli.get_unlocks().get_bitstring();
         full_generation(
