@@ -14,34 +14,34 @@ use std::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
 pub enum StartingAreaArg {
     RandomKingdom,
-    RandomExtra,
-    TrueRandom,
-    ChaoticRandom,
     Nest,
     Arsenal,
     Lighthouse,
     Streets,
     Lakeside,
-    Sanct,
     Depths,
+    Sanct,
     Aurum,
+    RandomExtra,
+    TrueRandom,
+    ChaoticRandom,
 }
 
 impl From<StartingAreaArg> for StartingArea {
     fn from(value: StartingAreaArg) -> Self {
         match value {
             StartingAreaArg::RandomKingdom => StartingArea::RandomKingdom,
-            StartingAreaArg::RandomExtra => StartingArea::RandomExtra,
-            StartingAreaArg::TrueRandom => StartingArea::TrueRandom,
-            StartingAreaArg::ChaoticRandom => StartingArea::ChaoticRandom,
             StartingAreaArg::Nest => StartingArea::Nest,
             StartingAreaArg::Arsenal => StartingArea::Arsenal,
             StartingAreaArg::Lighthouse => StartingArea::Lighthouse,
             StartingAreaArg::Streets => StartingArea::Streets,
             StartingAreaArg::Lakeside => StartingArea::Lakeside,
-            StartingAreaArg::Sanct => StartingArea::Sanct,
             StartingAreaArg::Depths => StartingArea::Depths,
+            StartingAreaArg::Sanct => StartingArea::Sanct,
             StartingAreaArg::Aurum => StartingArea::Aurum,
+            StartingAreaArg::RandomExtra => StartingArea::RandomExtra,
+            StartingAreaArg::TrueRandom => StartingArea::TrueRandom,
+            StartingAreaArg::ChaoticRandom => StartingArea::ChaoticRandom,
         }
     }
 }

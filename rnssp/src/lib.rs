@@ -151,7 +151,7 @@ impl Run {
             Outskirts
         } else if self.starting_area.is_extra() {
             Geode
-        } else if self.starting_area.is_very_random() {
+        } else if self.starting_area.is_area_random() {
             self.math_random_switch(&[Outskirts, Geode]).unwrap()
         } else {
             panic!(
@@ -165,7 +165,7 @@ impl Run {
             vec![Nest, Arsenal, Lighthouse, Streets, Lakeside]
         } else if self.starting_area.is_extra() {
             vec![Sanct, Depths, Aurum]
-        } else if self.starting_area.is_very_random() {
+        } else if self.starting_area.is_area_random() {
             vec![
                 Nest, Arsenal, Lighthouse, Streets, Lakeside, Sanct, Depths, Aurum,
             ]
@@ -184,12 +184,15 @@ impl Run {
         } else {
             self.rand.ds_list_shuffle(&mut possible_areas);
             self.hallseeds[0] = self.rand.irandom(0xFFFFFFFFu32.into()).into();
+            let first_area = self
+                .starting_area
+                .try_into()
+                .expect("Expected starting area to be non-random");
+            let mut filtered = possible_areas.iter().filter(|&&area| area != first_area);
             areas = [
-                self.starting_area
-                    .try_into()
-                    .expect("Expected starting area to be non-random"),
-                possible_areas[0],
-                possible_areas[1],
+                first_area,
+                *filtered.next().unwrap(),
+                *filtered.next().unwrap(),
             ]
         }
 
@@ -203,7 +206,7 @@ impl Run {
             Keep
         } else if self.starting_area.is_extra() {
             Darkhall
-        } else if self.starting_area.is_very_random() {
+        } else if self.starting_area.is_area_random() {
             if self.math_coinflip() { Keep } else { Darkhall }
         } else {
             panic!(

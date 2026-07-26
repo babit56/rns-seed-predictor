@@ -87,17 +87,17 @@ pub struct Unlocks {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StartingArea {
     RandomKingdom,
-    RandomExtra,
-    TrueRandom,
-    ChaoticRandom,
     Nest,
     Arsenal,
     Lighthouse,
     Streets,
     Lakeside,
-    Sanct,
     Depths,
+    Sanct,
     Aurum,
+    RandomExtra,
+    TrueRandom,
+    ChaoticRandom,
 }
 
 impl TryFrom<usize> for ChestColor {
@@ -343,7 +343,7 @@ impl StartingArea {
         }
     }
 
-    pub fn is_very_random(self: &Self) -> bool {
+    pub fn is_area_random(self: &Self) -> bool {
         match self {
             StartingArea::TrueRandom => true,
             StartingArea::ChaoticRandom => true,
