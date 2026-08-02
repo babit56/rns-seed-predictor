@@ -10,6 +10,7 @@ Edit `config.yaml` to desired search parameters. As an example it currently sear
 ```sh
 python3 main.py
 python3 main.py path/to/seeds.csv
+python3 main.py ../unique_seeds.csv 1 # 1p search
 ```
 
 Reads csv files from `full_gen/` if no args are given, otherwise reads from the first arg. Matching seeds are output in a readable format in `matching_runs_readable.txt` and in csv format in either `full_search_results/<bitstring>.csv` or `matching_runs.csv` depending on how the program was run

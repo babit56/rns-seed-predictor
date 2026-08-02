@@ -12,17 +12,18 @@ ranges:
      #   required_items: []  # Items that must appear somewhere in this range
      #   unique: false  # If true, each item must be in a different chest
      # Example: Mountain Staff and Firststrike Bracelet in first 2 chests, different chests
-     - start: 0
-       end: 0
-       required_items: ["Obsidian Rod"]
+     # - start: 0
+     #   end: 0
+     #   required_items: ["Obsidian Rod"]
      - start: 0
        end: 5
-       required_items: ["Youkai Bracelet", "Sweet Taffy", "Whitewing Bracelet", "Waterfall Polearm", "Large Anchor", "Flamewalker Boots"]
-       unique: true
-     - start: 0
-       end: 3
-       required_items: ["Venom Hood", "Blood Vial", "Rainbow Cape", "Youkai Bracelet"]
-       unique: true
+       # required_items: ["Royal Staff", "Spark of Determination", "Mermaid Scalemail", "Pajama Hat", "Crowfeather Hairpin", "Ivy Staff"] # 73389
+       # required_items: ["Lullaby Harp","Eternity Flute","Waterfall Polearm","Sacred Bow","Blue Rose","Sniper's Eyeglasses"]
+       required_items: ["Obsidian Hairpin","Nightingale Gown","Icicle Earrings","Saltwater Staff","Strawberry Cake","Stoneplate Armor"] # 47821
+     # - start: 0
+     #   end: 3
+     #   required_items: ["Venom Hood", "Blood Vial", "Rainbow Cape", "Youkai Bracelet"]
+     #   unique: true
   
   # shop_ranges:
      # - start: 0  # Shop index (0 = Shop 1)

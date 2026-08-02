@@ -34,52 +34,54 @@ The `--full-generation` option uses multiple processes, as many as possible. At 
 
 Though it's subject to change, at the time of writing the output of `rns-seed-predictor --seed 1585` is:
 ```
+Using unlocks with following bitstring: 11111111111111111111
 Seed: 1585
 Players: 4
 Difficulty: Hard/Lunar
-Hallseeds: [1521834084,265854828,29165545,1800124766,1137214511,3340410779]
-Areas: [hw_nest,hw_lighthouse,hw_lakeside,hw_arsenal,hw_streets]
-Outskirts: [enc_bird_sophomore1,enc_frog_tinkerer2,enc_wolf_blackear2,enc_mouse_cadet1,enc_dragon_granite1]
-Pale Keep: [enc_queens_knife0,enc_queens_staff0,enc_queens_axe0,enc_queens_harp0,enc_queens_spear0]
+Hallseeds: [2900418217, 2572066016, 97023707, 219281447, 1459899610, 657291952]
+Starting area: RandomKingdom
+Areas: [Kingdom Outskirts, Churchmouse Streets, Red Darkhouse, Scholar's Nest, Moonlit Prescipice]
+Encounters: [enc_mouse_cadet2, enc_bird_sophomore2, enc_dragon_granite2, enc_mouse_archer1, enc_mouse_oakspear1, enc_mouse_rosemage0, enc_mouse_paladin0, enc_dragon_gold1, enc_dragon_emerald0, enc_dragon_ruby0, enc_dragon_mythril0, enc_bird_student1, enc_bird_whispering0, enc_bird_archon0, enc_bird_valedictorian0, enc_queens_spear0, enc_queens_staff0, enc_queens_axe0, enc_rabbit_queen0]
 
-Shop 0:
-  Gems: Sapphire Primary Upgrade, Garnet Secondary Upgrade, Emerald Special Upgrade, Garnet Defensive Upgrade
-  Prices: 23, 24, 23, 27
-  Potions: Regeneration Potion, Essence of Spell, Fire Potion
-  Prices: 8, 9, 10
 Shop 1:
-  Gems: Ruby Primary Upgrade, Ruby Secondary Upgrade, Ruby Special Upgrade, Opal Defensive Upgrade
-  Prices: 27, 24, 26, 26
-  Potions: Essence of Spell, Fire Potion, Darkness Potion
-  Prices: 7, 8, 10
+  Gems: Garnet, Garnet, Opal, Opal
+  Prices: 24g, 27g, 23g, 27g
+  Potions: Regeneration Potion, Luck Potion, Essence of Steel
+  Prices: 8g, 9g, 10g
 Shop 2:
-  Gems: Ruby Primary Upgrade, Sapphire Secondary Upgrade, Ruby Special Upgrade, Emerald Defensive Upgrade
-  Prices: 25, 24, 26, 23
-  Potions: Darkness Potion, Essence of Strength, Quickening Potion
-  Prices: 8, 9, 10
+  Gems: Ruby, Sapphire, Sapphire, Sapphire
+  Prices: 26g, 25g, 27g, 24g
+  Potions: Winged Potion, Longarm Potion, Essence of Strength
+  Prices: 10g, 7g, 9g
 Shop 3:
-  Gems: Ruby Primary Upgrade, Emerald Secondary Upgrade, Emerald Special Upgrade, Garnet Defensive Upgrade
-  Prices: 25, 25, 25, 25
-  Potions: Vitality Potion, Longarm Potion, Essence of Wit
-  Prices: 8, 10, 9
+  Gems: Garnet, Garnet, Emerald, Ruby
+  Prices: 26g, 26g, 24g, 24g
+  Potions: Essence of Strength, Essence of Steel, Swifthand Potion
+  Prices: 8g, 9g, 9g
+Shop 4:
+  Gems: Emerald, Ruby, Opal, Ruby
+  Prices: 27g, 25g, 27g, 23g
+  Potions: Evasion Potion, Vitality Potion, Essence of Steel
+  Prices: 7g, 10g, 7g
 
-Chest 0 - White:
-  Items: Blacksteel Buckler, Thunderclap Gloves, Bloodflower Brooch, Mountain Staff, Battlemaiden Armor
 Chest 1 - Opal:
-  Items: Firststrike Bracelet, Phantom Dagger, Darkglass Spear, Gemini Necklace, Curse Talon
+  Clockwork Tome, Moon Pendant, Sewing Sword, Sleeping Greatbow, Ghost Spear
 Chest 2 - Ruby:
-  Items: Granite Greatsword, Ruby Circlet, Desert Earrings, Tough Gauntlet, Sapphire Violin
-Chest 3 - White:
-  Items: Giant Stone Club, Garnet Staff, Shinobi Tabi, Obsidian Hairpin, Reflection Shield
-Chest 4 - Sapphire:
-  Items: Shockwave Tome, Talon Charm, Vampiric Dagger, Hawkfeather Fan, Sniper's Eyeglasses
-Chest 5 - White:
-  Items: Leech Staff, Tiny Hourglass, Ruins Sword, Ivy Staff, Ornamental Bell
+  Pocketwatch, Ruins Sword, Granite Greatsword, Robe of Light, Flame Bow
+Chest 3 - Emerald:
+  Aquamarine Bracelet, Raindrop Earrings, Venom Hood, Midsummer Dress, Seashell Shield
+Chest 4 - White:
+  Lonesome Pendant, Lancer Gauntlets, Bloodhound Greatsword, Butterfly Hairpin, Cursed Candlestaff
+Chest 5 - Sapphire:
+  Hidden Blade, Teacher Knife, Tactician Rod, Shockwave Tome, Windbite Dagger
+Chest 6 - White:
+  Emerald Chestplate, Glittering Trumpet, Bloody Bandage, Usagi Kamen, Snow Boots
 
-1585,hw_nest,hw_lighthouse,hw_lakeside,hw_arsenal,hw_streets,enc_bird_sophomore1,enc_frog_tinkerer2,enc_wolf_blackear2,enc_queens_knife0,enc_queens_staff0,enc_queens_axe0,410,365,324,473,443,414,432,416,310,289,336,358,470,339,354,471,353,334,341,482,449,460,319,311,412,321,469,472,392,370,489,490,496,8,9,10,508,23,517,24,522,23,519,27,490,496,491,7,8,10,512,27,513,24,514,26,507,26,491,497,492,8,9,10,512,25,509,24,514,26,523,23,503,502,494,8,10,9,512,25,521,25,522,25,519,25,
+1585,0,4,3,1,6,418,411,624,407,543,531,584,448,637,457,598,597,509,501,511,611,557,434,595,545,641,552,553,561,424,467,489,432,539,606,681,691,692,8,9,10,709,24,710,27,699,23,700,27,685,694,689,10,7,9,705,26,702,25,703,27,704,24,689,692,687,8,9,9,709,26,710,26,715,24,708,24,693,695,692,7,10,7,713,27,706,25,699,27,708,23
+1585,hw_outskirts,hw_streets,hw_lighthouse,418,411,624,407,543,531,584,448,637,457,598,597,509,501,511,611,557,434,595,545,641,552,553,561,424,467,489,432,539,606,681,691,692,8,9,10,709,24,710,27,699,23,700,27,685,694,689,10,7,9,705,26,702,25,703,27,704,24,689,692,687,8,9,9,709,26,710,26,715,24,708,24,693,695,692,7,10,7,713,27,706,25,699,27,708,23
 ```
 
-The last line is meant for the csv, where all the numbers are various ID's. See constants at the top of `src/main.rs` for ID -> Item names and more.
+The 2nd to last line is meant for the csv, where all the numbers are various ID's. See constants at the top of `src/main.rs` for ID -> Item names and more.
 
 ## Building
 

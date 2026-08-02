@@ -99,23 +99,31 @@ for id, name in id_area_list:
 
 # Indicies
 # end index shouldbe index of first item after
+global area_start, area_end, item_start, chest_size, small_chest, item_end, shop_start, shop_length, shop_end
 area_start = 2
 area_end = area_start + 3
 item_start = 6
 chest_size = 5
-item_end = item_start + chest_size * 6
-shop_start = 36
+small_chest = 5
+item_end = item_start + chest_size * 2 + small_chest * 4
+shop_start = item_end
 shop_length = 14
 shop_end = shop_start + shop_length * 4
 
 def parse_line(line: str) -> Run:
+    global area_start, area_end, item_start, chest_size, small_chest, item_end, shop_start, shop_length, shop_end
     line_data = line.strip().split(",")
     seed = line_data[0]
     areas = tuple(map(lambda id: id_to_area[int(id)], line_data[area_start:area_end]))
-    chests = tuple(
-        Chest(contents=[id_to_name[int(item_id)] for item_id in chest_data])
-        for chest_data in itertools.batched(line_data[item_start:item_end], chest_size)
-    )
+    chests = []
+    item_index = item_start
+    curr_size = chest_size
+    for i in range(6):
+        if i >= 2: curr_size = small_chest
+        chest = [id_to_name[int(item_id)] for item_id in line_data[item_index:item_index + curr_size]]
+        chests.append(Chest(contents=chest))
+        item_index += curr_size
+    chests = tuple(chests)
     shops = tuple(
         Shop(
             upgrades=tuple(
@@ -201,6 +209,7 @@ def check_ranged_requirements(line: list, ranged_config: dict) -> bool:
 
 
 def check_chests(line: list, config: dict) -> bool:
+    global area_start, area_end, item_start, chest_size, small_chest, item_end, shop_start, shop_length, shop_end
     for range_config in config:
         start_chest = range_config.get("start", 0)
         end_chest = range_config.get("end", 5)
@@ -208,8 +217,14 @@ def check_chests(line: list, config: dict) -> bool:
         unique = range_config.get("unique", False)
         assert 0 <= start_chest <= end_chest < 6, f"chest start/end not within bounds, got: 0 <= {start_chest} <= {end_chest} < 6"
 
-        start_index = item_start + start_chest * chest_size
-        end_index = item_start + end_chest * chest_size + chest_size
+        if start_chest < 2:
+            start_index = item_start + start_chest * chest_size
+        else:
+            start_index = item_start + 2 * chest_size + (start_chest - 1) * small_chest
+        if end_chest < 2:
+            end_index = item_start + end_chest * chest_size
+        else:
+            end_index = item_start + 2 * chest_size + (end_chest - 1) * small_chest
         used_chests = []
         for required_item in required_items:
             try:
@@ -217,7 +232,10 @@ def check_chests(line: list, config: dict) -> bool:
             except ValueError:
                 # Didn't find item
                 return False
-            chest_index = (index - item_start) // chest_size
+            if index > item_start + 2 * chest_size:
+                chest_index = (index - item_start - 2 * chest_size) // small_chest + 2
+            else:
+                chest_index = (index - item_start) // chest_size
             if unique and chest_index in used_chests:
                 # Items weren't in seperate chests
                 return False
@@ -226,6 +244,7 @@ def check_chests(line: list, config: dict) -> bool:
 
 
 def check_shops(line: list, config: dict) -> bool:
+    global area_start, area_end, item_start, chest_size, small_chest, item_end, shop_start, shop_length, shop_end
     for range_config in config:
         start = range_config.get("start", 0)
         end = range_config.get("end", 3)
@@ -330,6 +349,33 @@ def main():
     if len(sys.argv) == 1:
         full_search(Path("../full_gen"), config)
         sys.exit(0)
+
+    global small_chest, item_end, shop_start, shop_end
+    if len(sys.argv) < 3 or sys.argv[2].startswith("4"): # 4p
+        small_chest = 5
+        item_end = item_start + chest_size * 2 + small_chest * 4
+        shop_start = item_end
+        shop_end = shop_start + shop_length * 4
+        assert shop_end == 92, "column count mismatch, probably bugged code"
+    elif sys.argv[2].startswith("1"): # 1p
+        small_chest = 3
+        item_end = item_start + chest_size * 2 + small_chest * 4
+        shop_start = item_end
+        shop_end = shop_start + shop_length * 4
+        assert shop_end == 84, "column count mismatch, probably bugged code"
+    elif sys.argv[2].startswith("2") or sys.argv[2].startswith("3"): # 2p/3p
+        small_chest = 4
+        item_end = item_start + chest_size * 2 + small_chest * 4
+        shop_start = item_end
+        shop_end = shop_start + shop_length * 4
+        assert shop_end == 88, "column count mismatch, probably bugged code"
+    else: # 4p again
+        small_chest = 5
+        item_end = item_start + chest_size * 2 + small_chest * 4
+        shop_start = item_end
+        shop_end = shop_start + shop_length * 4
+        assert shop_end == 92, "column count mismatch, probably bugged code"
+
     path = Path(sys.argv[1])
     if path.is_dir():
         full_search(path, config)
